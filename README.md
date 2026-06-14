@@ -83,6 +83,25 @@ curves and the rest appear as settings on the controller's device page
 - **Anything else** → *Settings → System → Logs* (filter `supergreenlab`), or
   open an [issue](https://github.com/Superheld/ha-supergreenlab/issues).
 
+## Bundled Lovelace card
+
+The integration ships a custom **`sgl-fan-card`** and auto-loads it — no separate
+HACS plugin and no manual dashboard resource needed. It's a *mode-aware* card for
+one fan/blower: it shows the mode plus only the settings relevant to that mode
+(Manual → speed; Timer → speed range; Temperature/Humidity/VPD/CO₂ → reference
+range + speed range).
+
+```yaml
+type: custom:sgl-fan-card
+title: Intake fan
+mode: select.dings_box_0_intake_fan_mode
+reference_from: number.dings_box_0_intake_fan_reference_from
+reference_to: number.dings_box_0_intake_fan_reference_to
+speed_min: number.dings_box_0_intake_fan_speed_min
+speed_max: number.dings_box_0_intake_fan_speed_max
+current: sensor.dings_box_0_intake_fan
+```
+
 ## Example dashboard
 
 [`dashboards/example-box.yaml`](dashboards/example-box.yaml) is a ready-to-paste

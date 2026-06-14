@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import os
+
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -9,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SuperGreenAPI, SuperGreenApiError
 from .config_flow import CONF_AUTH
-from .const import CONF_HOST
+from .const import CONF_HOST, DOMAIN
 from .coordinator import (
     RuntimeData,
     SuperGreenConfigEntry,
@@ -28,11 +32,29 @@ PLATFORMS: list[Platform] = [
     Platform.TIME,
 ]
 
+# Bundled Lovelace card, served and auto-loaded so users don't need a separate
+# HACS plugin or a manual dashboard resource.
+_CARD_URL = "/supergreenlab/sgl-fan-card.js"
+_CARD_KEY = f"{DOMAIN}_card_registered"
+
+
+async def _async_register_frontend(hass: HomeAssistant) -> None:
+    """Serve the bundled card and load it once for the frontend."""
+    if hass.data.get(_CARD_KEY):
+        return
+    hass.data[_CARD_KEY] = True
+    path = os.path.join(os.path.dirname(__file__), "sgl-fan-card.js")
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig(_CARD_URL, path, False)]
+    )
+    add_extra_js_url(hass, _CARD_URL)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: SuperGreenConfigEntry
 ) -> bool:
     """Set up SuperGreenLab Controller from a config entry."""
+    await _async_register_frontend(hass)
     session = async_get_clientsession(hass)
     api = SuperGreenAPI(entry.data[CONF_HOST], session, auth=entry.data.get(CONF_AUTH))
 
