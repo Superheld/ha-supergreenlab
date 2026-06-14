@@ -193,17 +193,37 @@ custom_components/supergreenlab/
 Tests use `pytest-homeassistant-custom-component` with a dict-backed fake
 controller (`tests/conftest.py`), so no hardware is needed.
 
+**Python** (the integration):
+
 ```bash
 pip install -r requirements_test.txt
 pytest -q
 ```
 
 Covered: config flow, setup / entity creation / single-device model, control
-writes (light, time, select), options layout + settings, and catalog / source
-decoding invariants.
+writes (light, time, select, number, button), the present-only source filter +
+its fallback, the light-phase select (write + derivation), the fan/blower mode
+presets, options layout + settings, and catalog / source decoding invariants.
 
 > Note: the suite needs the Python version Home Assistant targets (3.13). It
 > runs in CI; local runs on a newer Python may fail to install HA.
+
+**JavaScript** (the bundled cards' resolution logic):
+
+```bash
+node --test
+```
+
+The card module is loaded by HA as an ES module, so the three resolver functions
+(`resolveConfig` / `resolveLightConfig` / `resolveBoxConfig`) are `export`ed and
+tested in isolation (`tests/cards.test.js`) with a fake `hass`. The root
+`package.json` only marks the `.js` as ESM for node — it is not an npm package.
+Tests cover device/kind/box matching, the blower vs fan distinction, phase +
+schedule resolution, spectrum-by-LED-index correlation, and that a box card
+never mixes in another box's entities. The card classes touch browser globals at
+import, so the test stubs `HTMLElement` / `customElements` / `window` first.
+
+Add tests with every change — Python for entity logic, node for card resolution.
 
 ## CI
 
@@ -212,8 +232,11 @@ decoding invariants.
 - **ruff** — lint
 - **hassfest** — Home Assistant manifest validation
 - **HACS** — repository validation (`brands` ignored; only needed for the HACS
-  default store)
-- **pytest** — the test suite on Python 3.13
+  default store). **Gated to the `main` branch and PRs**: HACS validates the repo
+  as a "version", and a feature branch isn't a valid one — running it on every
+  branch push failed spuriously (`structure for refs/heads/… is not compliant`).
+- **pytest** — the Python suite on Python 3.13
+- **cards** — `node --test` for the card resolution logic
 
 ## Release workflow
 

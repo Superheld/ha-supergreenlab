@@ -96,6 +96,25 @@ async def test_light_phase_derived_from_times(hass: HomeAssistant, setup_entry, 
     assert hass.states.get(eid).state == "Vegetative"
 
 
+async def test_number_writes_value(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "number", "BOX_0_FAN_MIN")
+    await hass.services.async_call(
+        "number", "set_value", {"entity_id": eid, "value": 42}, blocking=True
+    )
+    assert store["BOX_0_FAN_MIN"] == 42
+
+
+async def test_button_season_start_writes_timestamp(
+    hass: HomeAssistant, setup_entry, store
+):
+    eid = _entity_id(hass, "button", "BOX_0_STARTED_AT")
+    await hass.services.async_call(
+        "button", "press", {"entity_id": eid}, blocking=True
+    )
+    # press_now buttons stamp the current unix time.
+    assert store["BOX_0_STARTED_AT"] > 0
+
+
 async def test_fan_mode_sets_source_and_range(hass: HomeAssistant, setup_entry, store):
     eid = _entity_id(hass, "select", "BOX_0_FAN_MODE")
     assert eid

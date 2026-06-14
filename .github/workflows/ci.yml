@@ -8,19 +8,22 @@ jobs:
   ruff:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: astral-sh/ruff-action@v3
 
   hassfest:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: home-assistant/actions/hassfest@master
 
   hacs:
     runs-on: ubuntu-latest
+    # HACS validates the repo as a "version"; a feature branch is not a valid
+    # one, so it only makes sense on the default branch and on pull requests.
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: hacs/action@main
         with:
           category: integration
@@ -32,9 +35,18 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - run: pip install -r requirements_test.txt
       - run: pytest -q
+
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test

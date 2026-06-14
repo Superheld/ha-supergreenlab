@@ -1,0 +1,9 @@
+{
+  "name": "ha-supergreenlab",
+  "private": true,
+  "type": "module",
+  "description": "Marks the bundled Lovelace cards as ES modules so node --test can import them. Not an npm package.",
+  "scripts": {
+    "test": "node --test"
+  }
+}

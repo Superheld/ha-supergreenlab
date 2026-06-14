@@ -34,7 +34,7 @@ const MODE_REF_SENSOR = {
 // mode entity), plus — for fan-specific entities — the fan kind, the box index
 // and a role suffix. Box/time/climate entities skip the kind filter. Accepts
 // both current and legacy names (entity ids don't change on rename).
-function resolveConfig(hass, config) {
+export function resolveConfig(hass, config) {
   const modeId = config.mode;
   let kind = "fan";
   let title = "Fan";
@@ -149,7 +149,7 @@ const LIGHT_MODE_FIELDS = {
   Season: ["start_month", "start_day", "duration", "sim_duration", "start_season"],
 };
 
-function resolveLightConfig(hass, config) {
+export function resolveLightConfig(hass, config) {
   const modeId = config.mode;
   const boxToken = (modeId.match(/box_\d+/) || [])[0];
   const deviceId = hass.entities?.[modeId]?.device_id;
@@ -242,7 +242,7 @@ class SglLightCard extends HTMLElement {
 // accepted as an alias for consistency with the other cards.
 // ---------------------------------------------------------------------------
 
-function resolveBoxConfig(hass, config) {
+export function resolveBoxConfig(hass, config) {
   const anchorId = config.entity || config.mode;
   const boxToken = (anchorId.match(/box_\d+/) || [])[0];
   const boxNum = boxToken ? boxToken.replace("box_", "") : null;
