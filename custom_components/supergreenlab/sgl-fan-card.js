@@ -4,12 +4,12 @@
  * Bundles the mode select with its dependent settings and shows only the
  * relevant ones for the chosen mode (something native cards can't do).
  *
- * Sketch / minimal version: vanilla custom element, no build step. Drop into
- * config/www/ and add as a dashboard resource, or ship via HACS (plugin).
+ * Easy config: you only provide the `mode` entity (or pick it in the editor);
+ * the reference/speed entities are derived from its entity id. Explicit entity
+ * ids in the config override the derived ones.
  */
 
 const MODE_FIELDS = {
-  // mode label -> which settings to show
   Manual: ["speed_min"],
   Timer: ["speed_min", "speed_max"],
   Temperature: ["reference_from", "reference_to", "speed_min", "speed_max"],
@@ -25,12 +25,33 @@ const FIELD_LABELS = {
   speed_max: "Speed max",
 };
 
+// Derive the sibling entity ids + a title from the mode entity id, e.g.
+// "select.<base>_intake_fan_mode" -> base "<base>_intake_fan".
+function deriveConfig(config) {
+  const base = config.mode.replace(/^select\./, "").replace(/_mode$/, "");
+  let title = config.title;
+  if (!title) {
+    if (base.endsWith("intake_fan")) title = "Intake fan";
+    else if (base.endsWith("exhaust_fan")) title = "Exhaust fan";
+    else title = "Fan";
+  }
+  return {
+    reference_from: `number.${base}_reference_from`,
+    reference_to: `number.${base}_reference_to`,
+    speed_min: `number.${base}_speed_min`,
+    speed_max: `number.${base}_speed_max`,
+    current: `sensor.${base}`,
+    ...config,
+    title,
+  };
+}
+
 class SglFanCard extends HTMLElement {
   setConfig(config) {
     if (!config.mode) {
       throw new Error("sgl-fan-card: 'mode' entity is required");
     }
-    this._config = config;
+    this._config = deriveConfig(config);
     this._root = null;
   }
 
@@ -42,6 +63,17 @@ class SglFanCard extends HTMLElement {
 
   getCardSize() {
     return 3;
+  }
+
+  static getStubConfig(hass) {
+    const mode = Object.keys(hass.states).find(
+      (e) => e.startsWith("select.") && e.endsWith("_fan_mode")
+    );
+    return { mode: mode || "select.REPLACE_intake_fan_mode" };
+  }
+
+  static getConfigElement() {
+    return document.createElement("sgl-fan-card-editor");
   }
 
   _build() {
@@ -78,7 +110,6 @@ class SglFanCard extends HTMLElement {
     const mode = modeState.state;
     this._body.innerHTML = "";
 
-    // current speed (optional)
     if (c.current && hass.states[c.current]) {
       const s = hass.states[c.current];
       const cur = document.createElement("div");
@@ -87,7 +118,6 @@ class SglFanCard extends HTMLElement {
       this._body.appendChild(cur);
     }
 
-    // mode selector
     const sel = document.createElement("select");
     sel.style.cssText = "padding:6px;border-radius:8px;";
     (modeState.attributes.options || []).forEach((opt) => {
@@ -104,7 +134,6 @@ class SglFanCard extends HTMLElement {
     );
     this._body.appendChild(this._row("Mode", sel));
 
-    // mode-dependent settings
     const fields = MODE_FIELDS[mode] || ["speed_min", "speed_max"];
     fields.forEach((f) => {
       const ent = c[f];
@@ -135,10 +164,50 @@ class SglFanCard extends HTMLElement {
   }
 }
 
+// Minimal visual editor: pick the fan's Mode entity, the rest is derived.
+class SglFanCardEditor extends HTMLElement {
+  setConfig(config) {
+    this._config = config;
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    this._render();
+  }
+
+  _render() {
+    if (!this._hass) return;
+    if (!this._picker) {
+      this.innerHTML = "";
+      const picker = document.createElement("ha-entity-picker");
+      picker.label = "Fan mode entity";
+      picker.includeDomains = ["select"];
+      picker.entityFilter = (s) => s.entity_id.endsWith("_fan_mode");
+      picker.addEventListener("value-changed", (e) => {
+        this.dispatchEvent(
+          new CustomEvent("config-changed", {
+            detail: { config: { ...this._config, mode: e.detail.value } },
+            bubbles: true,
+            composed: true,
+          })
+        );
+      });
+      this._picker = picker;
+      this.appendChild(picker);
+    }
+    this._picker.hass = this._hass;
+    this._picker.value = this._config.mode || "";
+  }
+}
+
 customElements.define("sgl-fan-card", SglFanCard);
+customElements.define("sgl-fan-card-editor", SglFanCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "sgl-fan-card",
   name: "SuperGreenLab Fan Card",
   description: "Mode-aware control for a SuperGreenLab fan/blower.",
+  preview: false,
+  documentationURL: "https://github.com/Superheld/ha-supergreenlab",
 });

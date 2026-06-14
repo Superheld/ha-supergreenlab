@@ -91,15 +91,24 @@ one fan/blower: it shows the mode plus only the settings relevant to that mode
 (Manual → speed; Timer → speed range; Temperature/Humidity/VPD/CO₂ → reference
 range + speed range).
 
+Add it from the card picker (**Add card → SuperGreenLab Fan Card**) and pick the
+fan's **Mode** entity in the editor — that's it. The reference and speed entities
+are derived automatically from the mode entity.
+
+Minimal YAML (just the mode entity; replace with your controller's name):
+
+```yaml
+type: custom:sgl-fan-card
+mode: select.supergreencontroller_box_0_intake_fan_mode
+```
+
+You can still override any derived entity or the title explicitly:
+
 ```yaml
 type: custom:sgl-fan-card
 title: Intake fan
-mode: select.dings_box_0_intake_fan_mode
-reference_from: number.dings_box_0_intake_fan_reference_from
-reference_to: number.dings_box_0_intake_fan_reference_to
-speed_min: number.dings_box_0_intake_fan_speed_min
-speed_max: number.dings_box_0_intake_fan_speed_max
-current: sensor.dings_box_0_intake_fan
+mode: select.supergreencontroller_box_0_intake_fan_mode
+speed_min: number.supergreencontroller_box_0_intake_fan_speed_min
 ```
 
 ## Example dashboard
