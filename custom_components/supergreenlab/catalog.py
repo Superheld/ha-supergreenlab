@@ -222,10 +222,14 @@ SELECTS: tuple[EntityDef, ...] = (
               scope="box", options_map=SOURCE_MAPS["co2_sensor"], enabled_default=False, **_CFG),
     EntityDef(platform="select", key="BOX_{box}_WEIGHT_SOURCE", name="Box {box} Weight source",
               scope="box", options_map=SOURCE_MAPS["weight_sensor"], enabled_default=False, **_CFG),
-    EntityDef(platform="select", key="BOX_{box}_FAN_REF_SOURCE", name="Box {box} Intake fan source",
-              scope="box", options_map=SOURCE_MAPS["fan_ref"], **_CFG),
-    EntityDef(platform="select", key="BOX_{box}_BLOWER_REF_SOURCE", name="Box {box} Exhaust fan source",
-              scope="box", options_map=SOURCE_MAPS["blower_ref"], **_CFG),
+    # Raw reference sources — superseded by the friendly fan/blower mode
+    # selects (see select.py); kept disabled-by-default for power users.
+    EntityDef(platform="select", key="BOX_{box}_FAN_REF_SOURCE",
+              name="Box {box} Intake fan source (advanced)",
+              scope="box", options_map=SOURCE_MAPS["fan_ref"], enabled_default=False, **_CFG),
+    EntityDef(platform="select", key="BOX_{box}_BLOWER_REF_SOURCE",
+              name="Box {box} Exhaust fan source (advanced)",
+              scope="box", options_map=SOURCE_MAPS["blower_ref"], enabled_default=False, **_CFG),
     EntityDef(platform="select", key="LED_{led}_TYPE", name="Light {led} spectrum",
               scope="led_box", options_map=LED_TYPE_MAP, icon="mdi:spectrum", **_CFG),
     EntityDef(platform="select", key="MOTOR_{motor}_SOURCE", name="Motor {motor} source",

@@ -44,3 +44,17 @@ async def test_select_source_writes_decoded_int(hass: HomeAssistant, setup_entry
         blocking=True,
     )
     assert store["BOX_0_TEMP_SOURCE"] == 16
+
+
+async def test_fan_mode_sets_source_and_range(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "select", "BOX_0_FAN_MODE")
+    assert eid
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": eid, "option": "Temperature"},
+        blocking=True,
+    )
+    assert store["BOX_0_FAN_REF_SOURCE"] == 1
+    assert store["BOX_0_FAN_REF_MIN"] == 21
+    assert store["BOX_0_FAN_REF_MAX"] == 30

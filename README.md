@@ -69,8 +69,11 @@ curves and the rest appear as settings on the controller's device page
 
 - **Light brightness** sets each channel's intensity; the light's actual output
   still follows the box's on/off schedule.
-- **Make a fan follow time instead of temperature:** change that fan's
-  *reference source* (e.g. to the box's timer output) on the device page.
+- **Make a fan follow temperature, time, humidity, …:** use the box's
+  **Intake/Exhaust fan mode** control (Manual / Timer / Temperature / Humidity /
+  VPD / CO₂). It sets the reference and a sensible range in one step; fine-tune
+  the range and min/max afterwards. (A raw *source* select is available
+  disabled-by-default for power users.)
 
 ## Troubleshooting
 
