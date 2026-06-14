@@ -70,7 +70,7 @@ curves and the rest appear as settings on the controller's device page
 - **Light brightness** sets each channel's intensity; the light's actual output
   still follows the box's on/off schedule.
 - **Make a fan follow temperature, time, humidity, …:** use the box's
-  **Intake/Exhaust fan mode** control (Manual / Timer / Temperature / Humidity /
+  **Intake/Blower mode** control (Manual / Timer / Temperature / Humidity /
   VPD / CO₂). It sets the reference and a sensible range in one step; fine-tune
   the range and min/max afterwards. (A raw *source* select is available
   disabled-by-default for power users.)
@@ -99,16 +99,16 @@ Minimal YAML (just the mode entity; replace with your controller's name):
 
 ```yaml
 type: custom:sgl-fan-card
-mode: select.supergreencontroller_box_0_intake_fan_mode
+mode: select.supergreencontroller_box_0_fan_mode
 ```
 
 You can still override any derived entity or the title explicitly:
 
 ```yaml
 type: custom:sgl-fan-card
-title: Intake fan
-mode: select.supergreencontroller_box_0_intake_fan_mode
-speed_min: number.supergreencontroller_box_0_intake_fan_speed_min
+title: Fan
+mode: select.supergreencontroller_box_0_fan_mode
+speed_min: number.supergreencontroller_box_0_fan_speed_min
 ```
 
 ## Example dashboard

@@ -114,7 +114,7 @@ class SuperGreenVentModeSelect(SuperGreenEntity, SelectEntity):
         self._source_key = f"BOX_{box}_{kind}_REF_SOURCE"
         self._min_key = f"BOX_{box}_{kind}_REF_MIN"
         self._max_key = f"BOX_{box}_{kind}_REF_MAX"
-        label = "Intake fan" if kind == "FAN" else "Exhaust fan"
+        label = "Fan" if kind == "FAN" else "Blower"
         self._attr_name = f"Box {box} {label} mode"
         self._attr_unique_id = self._unique_id(f"BOX_{box}_{kind}_MODE")
         self._attr_options = list(_VENT_MODES)

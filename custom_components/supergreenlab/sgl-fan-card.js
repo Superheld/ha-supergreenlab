@@ -27,7 +27,13 @@ const MODE_FIELDS = {
 // current and legacy role suffixes (entity ids don't change on rename).
 function resolveConfig(hass, config) {
   const modeId = config.mode;
-  const kind = modeId.includes("exhaust") ? "exhaust" : "intake";
+  // Disambiguate fan (in-box) vs blower (exhaust). New ids use fan/blower;
+  // upgraded installs may still use the old intake/exhaust wording.
+  let kind = "fan";
+  let title = "Fan";
+  if (modeId.includes("blower")) [kind, title] = ["blower", "Blower"];
+  else if (modeId.includes("exhaust")) [kind, title] = ["exhaust", "Blower"];
+  else if (modeId.includes("intake")) [kind, title] = ["intake", "Fan"];
   const boxToken = (modeId.match(/box_\d+/) || [])[0];
   const deviceId = hass.entities?.[modeId]?.device_id;
 
@@ -47,12 +53,12 @@ function resolveConfig(hass, config) {
     scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
 
   return {
-    title: kind === "exhaust" ? "Exhaust fan" : "Intake fan",
+    title,
     reference_from: find("number", ["reference_from", "ref_min"]),
     reference_to: find("number", ["reference_to", "ref_max"]),
-    speed_min: find("number", ["speed_min", "fan_min"]),
-    speed_max: find("number", ["speed_max", "fan_max"]),
-    current: find("sensor", ["_fan"]),
+    speed_min: find("number", ["speed_min", "fan_min", "blower_min"]),
+    speed_max: find("number", ["speed_max", "fan_max", "blower_max"]),
+    current: find("sensor", ["_fan", "_blower"]),
     ...config,
   };
 }

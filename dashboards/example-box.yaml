@@ -41,44 +41,44 @@ cards:
       - entity: time.supergreencontroller_box_0_light_off_time
         name: Off
 
-  # --- Intake fan (mode + its settings, bundled) -----------------------------
+  # --- Fan (mode + its settings, bundled) -----------------------------
   - type: entities
-    title: Intake fan
+    title: Fan
     entities:
-      - entity: sensor.supergreencontroller_box_0_intake_fan
+      - entity: sensor.supergreencontroller_box_0_fan
         name: Current speed
-      - entity: select.supergreencontroller_box_0_intake_fan_mode
+      - entity: select.supergreencontroller_box_0_fan_mode
         name: Mode
       - type: section
         label: Reference range (drives the ramp)
-      - entity: number.supergreencontroller_box_0_intake_fan_reference_from
+      - entity: number.supergreencontroller_box_0_fan_reference_from
         name: From
-      - entity: number.supergreencontroller_box_0_intake_fan_reference_to
+      - entity: number.supergreencontroller_box_0_fan_reference_to
         name: To
       - type: section
         label: Speed range
-      - entity: number.supergreencontroller_box_0_intake_fan_speed_min
+      - entity: number.supergreencontroller_box_0_fan_speed_min
         name: Min
-      - entity: number.supergreencontroller_box_0_intake_fan_speed_max
+      - entity: number.supergreencontroller_box_0_fan_speed_max
         name: Max
 
-  # --- Exhaust fan -----------------------------------------------------------
+  # --- Blower -----------------------------------------------------------
   - type: entities
-    title: Exhaust fan
+    title: Blower
     entities:
-      - entity: sensor.supergreencontroller_box_0_exhaust_fan
+      - entity: sensor.supergreencontroller_box_0_blower
         name: Current speed
-      - entity: select.supergreencontroller_box_0_exhaust_fan_mode
+      - entity: select.supergreencontroller_box_0_blower_mode
         name: Mode
       - type: section
         label: Reference range (drives the ramp)
-      - entity: number.supergreencontroller_box_0_exhaust_fan_reference_from
+      - entity: number.supergreencontroller_box_0_blower_reference_from
         name: From
-      - entity: number.supergreencontroller_box_0_exhaust_fan_reference_to
+      - entity: number.supergreencontroller_box_0_blower_reference_to
         name: To
       - type: section
         label: Speed range
-      - entity: number.supergreencontroller_box_0_exhaust_fan_speed_min
+      - entity: number.supergreencontroller_box_0_blower_speed_min
         name: Min
-      - entity: number.supergreencontroller_box_0_exhaust_fan_speed_max
+      - entity: number.supergreencontroller_box_0_blower_speed_max
         name: Max
