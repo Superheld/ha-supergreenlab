@@ -154,13 +154,13 @@ NUMBERS: tuple[EntityDef, ...] = (
               enabled_default=False, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_WATERING_POWER", name="Box {box} Watering power",
               scope="box", unit="%", enabled_default=False, **_CFG),
-    # season
+    # season (user-facing settings; surfaced by the light card in Season mode)
     EntityDef(platform="number", key="BOX_{box}_START_MONTH", name="Box {box} Season start month",
-              scope="box", min=1, max=12, enabled_default=False, **_CFG),
+              scope="box", min=1, max=12, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_START_DAY", name="Box {box} Season start day",
-              scope="box", min=1, max=31, enabled_default=False, **_CFG),
+              scope="box", min=1, max=31, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_DURATION_DAYS", name="Box {box} Season duration",
-              scope="box", max=365, unit="d", enabled_default=False, **_CFG),
+              scope="box", max=365, unit="d", **_CFG),
     # leaf offset (stored in tenths of a degree)
     EntityDef(platform="number", key="SHT21_{n}_VPD_LEAF_OFFSET", name="SHT21 #{n} leaf offset",
               scope="sht", min=-100, max=100, enabled_default=False, **_CFG),
