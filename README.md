@@ -1,140 +1,86 @@
-# SuperGreenLab Controller — Home Assistant Integration
+# SuperGreenLab Controller for Home Assistant
 
-A local-polling Home Assistant integration for the
-[SuperGreenController](https://github.com/supergreenlab/SuperGreenOS) running
-SuperGreenOS. It talks to the controller's built-in HTTP key/value API on your
-LAN — no cloud, no MQTT broker, no firmware changes required.
+Control and monitor a [SuperGreenController](https://github.com/supergreenlab/SuperGreenOS)
+(running SuperGreenOS) from Home Assistant — fully local, over your LAN.
+No cloud account, no MQTT broker, no firmware changes.
 
-## What it does
+## What you get
 
-On setup the integration probes the controller, detects which grow boxes are
-enabled and which LED channels are assigned to them, and creates entities
-accordingly. The whole entity set is defined declaratively in `catalog.py`.
+For each grow box configured on your controller:
 
-Two coordinators poll the device: **live** readings (temperature, humidity,
-fan speeds, …) every 30 s by default, and **config** values every 180 s
-(they also update instantly when you change them from HA). The live interval is
-adjustable via the integration's options.
+- 💡 **Lights** — brightness per LED channel
+- 🌡️ **Climate** — temperature, humidity, VPD and CO₂ sensors
+- 🌀 **Ventilation** — exhaust / intake fan speeds and curve limits
+- ⏰ **Light schedule** — on/off times (as simple HH:MM controls)
+- ⚙️ Plus watering, weight, LED spectrum, sensor sources and the controller's
+  other settings, and a restart button
 
-There is a single HA **device: the controller**. A **box** is not a device — it
-is a logical slot (0..2) on the controller into which you wire hardware
-(lamps, fans, sensors). Box membership shows as a name prefix ("Box 0 …"); use
-HA **Areas** to group a box's entities by physical space if you like.
+Everything lives on a single Home Assistant **device** (the controller). A
+*box* is a logical slot on the controller, shown as a name prefix (“Box 0 …”).
 
-### Controls & sensors (dashboard)
-
-| Platform | Entity | Firmware key | Notes |
-|---|---|---|---|
-| light | Light 0..n | `LED_n_DIM` | per assigned LED channel, brightness 0–100 |
-| sensor | Temperature / Humidity / VPD / CO2 | `BOX_x_TEMP/HUMI/VPD/CO2` | VPD in kPa (raw ÷ 100) |
-| sensor | Exhaust / Intake fan, Light output | `BOX_x_BLOWER_DUTY` / `FAN_DUTY` / `TIMER_OUTPUT` | actual %, read-only |
-| binary_sensor | Light on | `BOX_x_TIMER_OUTPUT` | on when schedule output > 0 |
-| time | Light on / off time | `BOX_x_ON_HOUR`+`ON_MIN`, `OFF_HOUR`+`OFF_MIN` | hour & minute merged into one HH:MM control |
-
-### Device layout (integration options)
-
-The structural choices — **which boxes are enabled** and **which LED channel
-belongs to which box** — live in the integration's options, not as entities:
-they decide which entities exist, are rarely changed, and would otherwise
-clutter the device with controls for boxes/channels you don't use.
-
-*Settings → Devices & Services → SuperGreenLab Controller → Configure →
-**Device layout*** lets you toggle boxes and assign each LED channel. The chosen
-layout is written to the controller (the single source of truth) and the entities
-are rebuilt afterwards.
-
-### Configuration (device page → Configuration)
-
-Operational settings the controller stores are mirrored as config entities —
-the device stays the source of truth, nothing is duplicated.
-
-| Platform | Entity | Firmware key |
-|---|---|---|
-| select | LED spectrum, timer mode, sensor & fan sources, motor source | `LED_n_TYPE`, `BOX_x_TIMER_TYPE`, `*_SOURCE` (decoded to readable options) |
-| switch | LED fade, Emerson effect, LED fast PWM, motor curve | `LED_n_FADE`, `BOX_x_TIMER_EMERSON_POWER`, `LEDS_FASTMODE`, `MOTORS_CURVE` |
-| number | Ventilation curve, watering, season, Emerson ratio, calibration, motors, valve, status LED | many |
-| button | Restart controller | `REBOOT` |
-
-Disabled-by-default entities exist for less common keys (per-port leaf offsets,
-load-cell calibration, tare, valve, motors, Emerson, status LED, manual watering)
-— enable them in the entity settings when you need them.
-
-Diagnostics: `STATE`, `N_RESTARTS`, sensor `*_PRESENT` flags.
-
-> **Light model:** brightness sets the per-channel intensity (`LED_n_DIM`),
-> exactly like the SuperGreenLab app's dimmer. Actual output also depends on the
-> box's on/off schedule. To gang several channels into one slider, create a
-> native **Light Group** helper in Home Assistant.
-
-> **Sensor sources:** each box selects which physical sensor feeds it. The
-> `*_SOURCE` selects show decoded names like "SHT21 temperature on port #1". The
-> integer encoding is baked from the firmware config (`sources.py`).
-
-## Installation
-
-### HACS (recommended)
-
-Easiest to install *and* to keep updated — new releases show up in HACS with a
-one-click update.
+## Installation (HACS)
 
 > Requires [HACS](https://hacs.xyz). If you don't have it yet, install HACS
-> first by following its own documentation.
-
-Then add this integration:
+> first by following its documentation.
 
 1. Open **HACS** → top-right **⋮ → Custom repositories**.
 2. Repository: `https://github.com/Superheld/ha-supergreenlab` — Type:
    **Integration** → **Add**.
-3. Search for **SuperGreenLab Controller** in HACS → open → **Download**.
-4. **Restart Home Assistant** when prompted.
+3. Search for **SuperGreenLab Controller** → **Download**.
+4. **Restart Home Assistant**.
 
-### Manual / git (no HACS)
+<details>
+<summary>Install without HACS</summary>
 
-Get the `supergreenlab` folder into your config directory so the final path is
-`config/custom_components/supergreenlab/manifest.json`, then restart HA.
-
-On HA OS / Supervised, the simplest no-copy way is the **Terminal & SSH** app:
+On Home Assistant OS / Supervised, use the **Terminal & SSH** app:
 
 ```bash
 cd /tmp && rm -rf sgl && git clone https://github.com/Superheld/ha-supergreenlab.git sgl
 mkdir -p /config/custom_components
 cp -r /tmp/sgl/custom_components/supergreenlab /config/custom_components/
-ls /config/custom_components/supergreenlab/manifest.json   # sanity check
 ```
 
-To update later, re-run the same block and restart. On HA Container / Core,
-copy the `custom_components/supergreenlab` folder into your `config/custom_components/`
-directory instead.
+Then restart Home Assistant. To update later, run the same commands again.
+On HA Container / Core, copy `custom_components/supergreenlab` into your
+`config/custom_components/` folder instead.
+</details>
 
 ## Setup
 
-1. **Settings → Devices & Services → Add Integration → SuperGreenLab Controller**
-2. Enter the controller's IP address (e.g. `192.168.1.2`).
-3. Username/password are only needed if you set an `HTTPD_AUTH` token on the
-   device. By default the API is open on the local network and you can leave
-   them blank.
+1. **Settings → Devices & Services → Add Integration → SuperGreenLab Controller**.
+2. Enter the controller's IP address (e.g. `192.168.1.50`).
+3. Leave username / password blank — they're only needed if you set an auth
+   token on the device.
 
-The controller's chip MAC (`BROKER_CLIENTID`) is used as the unique device id,
-so a changing DHCP address won't create duplicates — just re-run setup with the
-new IP.
+The controller's chip MAC is used as its unique id, so a changing DHCP address
+won't create duplicates — just re-run setup with the new IP.
+
+### Configure your boxes
+
+Open **Configure** on the integration → **Device layout** to enable the boxes
+you use and assign each LED channel to a box. Sensor sources, schedules, fan
+curves and the rest appear as settings on the controller's device page
+(under *Configuration*).
+
+> 💡 Tip: add a box's entities to a Home Assistant **Area** to group them by
+> physical space.
+
+## Tips
+
+- **Light brightness** sets each channel's intensity; the light's actual output
+  still follows the box's on/off schedule.
+- **Make a fan follow time instead of temperature:** change that fan's
+  *reference source* (e.g. to the box's timer output) on the device page.
 
 ## Troubleshooting
 
-- **Integration doesn't appear** in the Add Integration list → the folder is in
-  the wrong place (must be exactly `config/custom_components/supergreenlab/manifest.json`)
-  or Home Assistant wasn't restarted.
-- **"Failed to connect"** → check that the Home Assistant host can reach the
-  controller's IP (same network), and that the IP is correct.
-- **Other errors** → check *Settings → System → Logs* for entries from
-  `supergreenlab`.
+- **Integration not listed** after install → restart Home Assistant.
+- **“Failed to connect”** → check the IP and that Home Assistant can reach the
+  controller on your network.
+- **Anything else** → *Settings → System → Logs* (filter `supergreenlab`), or
+  open an [issue](https://github.com/Superheld/ha-supergreenlab/issues).
 
-## How it talks to the controller
+---
 
-```
-GET  http://<ip>/i?k=KEY          -> integer value
-POST http://<ip>/i?k=KEY&v=123    -> set integer
-GET  http://<ip>/s?k=KEY          -> string value
-GET  http://<ip>/fs/config.json   -> gzipped key manifest
-```
-
-This is the same local API the official app uses.
+Building on or contributing to this integration? See
+[DEVELOPMENT.md](DEVELOPMENT.md).
