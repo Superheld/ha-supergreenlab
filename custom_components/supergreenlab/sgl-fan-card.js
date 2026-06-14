@@ -20,24 +20,32 @@ const MODE_FIELDS = {
   CO2: ["reference_from", "reference_to", "speed_min", "speed_max"],
 };
 
-// Resolve sibling entities from the mode entity by id prefix + role suffix,
-// accepting both current and legacy names (entity ids don't change on rename).
+// Resolve sibling entities from the mode entity. Siblings are matched by the
+// same *device* (robust against mismatched entity-id prefixes, e.g. a renamed
+// mode entity), plus the fan kind, box index and a role suffix. Falls back to
+// id-substring matching if the entity registry isn't available. Accepts both
+// current and legacy role suffixes (entity ids don't change on rename).
 function resolveConfig(hass, config) {
-  const m = config.mode.match(/^select\.(.+)_(intake|exhaust)_fan_mode$/);
-  if (!m) {
-    return { title: config.title || "Fan", ...config };
-  }
-  const [, prefix, kind] = m;
-  const head = `${prefix}_${kind}`;
+  const modeId = config.mode;
+  const kind = modeId.includes("exhaust") ? "exhaust" : "intake";
+  const boxToken = (modeId.match(/box_\d+/) || [])[0];
+  const deviceId = hass.entities?.[modeId]?.device_id;
+
   const find = (domain, suffixes) => {
-    const start = `${domain}.${head}`;
     for (const id of Object.keys(hass.states)) {
-      if (id.startsWith(start) && suffixes.some((s) => id.endsWith(s))) return id;
+      if (!id.startsWith(`${domain}.`)) continue;
+      if (deviceId) {
+        if (hass.entities?.[id]?.device_id !== deviceId) continue;
+      }
+      if (!id.includes(kind)) continue;
+      if (boxToken && !id.includes(boxToken)) continue;
+      if (suffixes.some((s) => id.endsWith(s))) return id;
     }
     return undefined;
   };
+
   return {
-    title: kind === "intake" ? "Intake fan" : "Exhaust fan",
+    title: kind === "exhaust" ? "Exhaust fan" : "Intake fan",
     reference_from: find("number", ["reference_from", "ref_min"]),
     reference_to: find("number", ["reference_to", "ref_max"]),
     speed_min: find("number", ["speed_min", "fan_min"]),
