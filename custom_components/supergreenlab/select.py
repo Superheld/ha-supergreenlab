@@ -14,6 +14,8 @@ Two kinds of select:
 
 from __future__ import annotations
 
+import re
+
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -23,6 +25,11 @@ from .catalog import SELECTS, EntityDef, expand
 from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator
 from .entity import SGLCatalogEntity, SuperGreenEntity
 from .sources import SOURCE_MAPS
+
+# Source-list labels that name a physical i2c sensor at a port, e.g.
+# "SHT21 temperature on port #1". The port number (#1..#3) maps to the
+# firmware's zero-based ``{DEVICE}_{n}_PRESENT`` flag.
+_SENSOR_OPTION = re.compile(r"^(SHT21|SCD30|HX711) .* on port #(\d)$")
 
 # A ventilation mode is a preset of (reference-source offset, ref_min, ref_max).
 # The concrete source value is ``offset + box`` (matching the firmware's
@@ -92,7 +99,40 @@ class SuperGreenSelect(SGLCatalogEntity, SelectEntity):
         self._label_to_int: dict[str, int] = {
             v: k for k, v in self._int_to_label.items()
         }
-        self._attr_options = list(self._int_to_label.values())
+        self._all_options = list(self._int_to_label.values())
+
+    @property
+    def options(self) -> list[str]:
+        """Offer only sensors the firmware reports as present, plus the rest.
+
+        Source lists enumerate every metric x port; filtering to the
+        ``*_PRESENT`` flags keeps the dropdown to the hardware that's actually
+        wired. Non-sensor entries (off, box timer outputs, …) always stay. Falls
+        back to all sensors if presence detection reports none (so initial setup
+        isn't blocked), and always keeps the current selection valid.
+        """
+        data = self.coordinator.data or {}
+        sensors: list[str] = []
+        present: list[str] = []
+        for label in self._all_options:
+            m = _SENSOR_OPTION.match(label)
+            if m is None:
+                continue
+            sensors.append(label)
+            device, port = m.group(1), int(m.group(2)) - 1
+            if data.get(f"{device}_{port}_PRESENT") == 1:
+                present.append(label)
+        if not sensors:
+            return self._all_options
+        keep = set(present or sensors)
+        current = self.current_option
+        if current is not None:
+            keep.add(current)
+        return [
+            label
+            for label in self._all_options
+            if not _SENSOR_OPTION.match(label) or label in keep
+        ]
 
     @property
     def current_option(self) -> str | None:

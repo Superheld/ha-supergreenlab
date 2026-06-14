@@ -159,6 +159,15 @@ encodes both the metric and the port. Lists (full maps in `sources.py`):
 always off/manual. Example (`temp_sensor`): `1–3` = SHT21 ports, `16–18` = SCD30
 ports.
 
+**Present-only filtering:** these lists enumerate every metric × port, which
+floods the dropdowns. `SuperGreenSelect.options` (in `select.py`) filters sensor
+entries to the firmware's `{SHT21,SCD30,HX711}_n_PRESENT` flags (parsed from the
+"… on port #N" labels, `#N → PRESENT_{N-1}`). Non-sensor entries (off, box timer
+outputs, motor controls) always stay; it falls back to all sensors if presence
+detection reports none, and always keeps the current selection so the state
+stays valid. The `*_PRESENT` keys are polled by the slow coordinator (the same
+one the source selects use).
+
 ### Small enums
 
 `STATE` (0 first-run / 1 idle / 2 running), `TIMER_TYPE` (0 Manual / 1 On-Off /
@@ -235,8 +244,10 @@ or manual dashboard resource is needed. Notes:
 - Cards render a native HA **`entities` card** via `loadCardHelpers()` and just
   choose which rows to show — so controls look/behave natively.
 - They are **mode-aware**: `sgl-fan-card` switches rows on the fan/blower mode;
-  `sgl-light-card` switches on the box timer type (and shows the grow-phase
-  select in On/Off mode).
+  `sgl-light-card` is the **scheduler** (like the app's schedule screen) — it
+  shows only the timer mode + the inputs that mode needs (On/Off → grow-phase
+  select + on/off times; Season → season settings). Per-channel brightness and
+  "light on" are deliberately *not* in it.
 - `sgl-box-card` is a per-box **overview/setup** card: it groups the box's
   entities into `{type: "section"}` rows (Status / Lights / Climate sources /
   Ventilation / Schedule). It anchors on any box entity (`entity:` or `mode:`).

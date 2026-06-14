@@ -168,15 +168,9 @@ function resolveLightConfig(hass, config) {
   const find = (domain, suffixes) =>
     scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
 
-  const lights = Object.keys(hass.states)
-    .filter((id) => id.startsWith("light.") && onDevice(id) && inBox(id))
-    .sort();
-
   const boxNum = boxToken ? boxToken.replace("box_", "") : null;
   return {
     title: boxNum !== null ? `Box ${boxNum} light` : "Light",
-    lights,
-    light_on: find("binary_sensor", ["light_on"]),
     phase: find("select", ["light_phase"]),
     on_time: find("time", ["on_time"]),
     off_time: find("time", ["off_time"]),
@@ -215,10 +209,9 @@ class SglLightCard extends HTMLElement {
     const mode = hass.states[c.mode]?.state;
     const has = (id) => id && hass.states[id];
 
-    const entities = [];
-    if (has(c.light_on)) entities.push(c.light_on);
-    entities.push(c.mode);
-    for (const l of c.lights) entities.push(l);
+    // Scheduler only: timer mode + the inputs relevant to it (phase/times or
+    // season). Per-channel brightness and "light on" live elsewhere.
+    const entities = [c.mode];
     for (const f of LIGHT_MODE_FIELDS[mode] || []) {
       if (has(c[f])) entities.push(c[f]);
     }

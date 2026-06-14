@@ -10,7 +10,8 @@ For each grow box configured on your controller:
 
 - 💡 **Lights** — brightness per LED channel
 - 🌡️ **Climate** — temperature, humidity, VPD and CO₂ sensors
-- 🌀 **Ventilation** — exhaust / intake fan speeds and curve limits
+- 🌀 **Ventilation** — fan (in-box circulation) and blower (exhaust) speeds and
+  curve limits
 - ⏰ **Light schedule** — on/off times (as simple HH:MM controls)
 - ⚙️ Plus watering, weight, LED spectrum, sensor sources and the controller's
   other settings, and a restart button
@@ -69,11 +70,14 @@ curves and the rest appear as settings on the controller's device page
 
 - **Light brightness** sets each channel's intensity; the light's actual output
   still follows the box's on/off schedule.
-- **Make a fan follow temperature, time, humidity, …:** use the box's
-  **Intake/Blower mode** control (Manual / Timer / Temperature / Humidity /
+- **Make a fan or blower follow temperature, time, humidity, …:** use the box's
+  **Fan/Blower mode** control (Manual / Timer / Temperature / Humidity /
   VPD / CO₂). It sets the reference and a sensible range in one step; fine-tune
   the range and min/max afterwards. (A raw *source* select is available
   disabled-by-default for power users.)
+- **Sensor source dropdowns** list only the sensors the controller detects as
+  present at their ports — not every theoretical option. If detection finds none
+  of a kind, all are shown so you can still set it up.
 
 ## Troubleshooting
 
@@ -109,12 +113,13 @@ mode: select.supergreencontroller_box_0_blower_mode
 
 ### `sgl-light-card`
 
-For a box's **lights** — point it at the box **Timer mode** select. Shows the
-LED channels (brightness) plus, depending on the timer type, the schedule
-(On/Off) or the season settings (Season). In On/Off schedule mode it also offers
-a **Light phase** picker — *Vegetative / Bloom / Auto* — the same grow-phase
-presets as the app: choosing one fills sensible on/off times (editing a time by
-hand switches it to *Custom*).
+The box's light **scheduler** (like the app's schedule screen) — point it at the
+box **Timer mode** select. Shows the mode (Manual / On/Off / Season) and *only*
+the inputs that mode needs: in **On/Off** a **Light phase** picker (*Vegetative /
+Bloom / Auto*, the app's grow-phase presets — choosing one fills sensible on/off
+times; editing a time by hand switches it to *Custom*) plus the on/off times; in
+**Season** the season settings. Per-channel brightness isn't here — it lives on
+the device page / in the box card.
 
 ```yaml
 type: custom:sgl-light-card
