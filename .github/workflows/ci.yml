@@ -24,6 +24,10 @@ jobs:
       - uses: hacs/action@main
         with:
           category: integration
+          # 'brands' requires assets in the official home-assistant/brands repo,
+          # which only matters for inclusion in the HACS default store, not for
+          # installing this as a custom repository.
+          ignore: brands
 
   tests:
     runs-on: ubuntu-latest
