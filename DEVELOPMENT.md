@@ -121,6 +121,14 @@ Editing a time by hand therefore flips the phase to "Custom" on its own, and the
 phase survives restarts because it's read back from the device. The bundled light
 card shows it above the on/off times in On-Off schedule mode.
 
+**One-way by nature:** because the phase label lives only in the app (and its
+cloud), changing the schedule from anywhere else (HA, a second phone) updates the
+device's *times* but the app keeps showing its last-set phase — e.g. it stays on
+"Auto" after we set Bloom. There is no device key to sync the label back, so this
+is not fixable locally (only via the SGL cloud, which we deliberately avoid). The
+actual schedule on the device is correct regardless; only the app's cosmetic
+label and its journal history lag.
+
 ### Ventilation — Fan vs Blower
 
 Two distinct units per box: **Fan** (`BOX_x_FAN_*`, circulates air *inside* the
