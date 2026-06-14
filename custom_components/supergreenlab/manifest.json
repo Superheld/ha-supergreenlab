@@ -1,6 +1,7 @@
 {
   "domain": "supergreenlab",
   "name": "SuperGreenLab Controller",
+  "after_dependencies": ["frontend", "http"],
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://github.com/Superheld/ha-supergreenlab",
