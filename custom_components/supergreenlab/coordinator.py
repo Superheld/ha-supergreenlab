@@ -140,6 +140,11 @@ def build_coordinators(
     for led in device.led_to_box:
         fast_keys.add(f"LED_{led}_DIM")
 
+    # The per-box "sunglasses" timestamp backs the work-light switch; poll it
+    # fast so the switch reflects the ~20 min window decaying back to off.
+    for box in device.boxes:
+        fast_keys.add(f"BOX_{box}_LED_DIM")
+
     fast_seconds = entry.options.get(
         CONF_FAST_INTERVAL, int(FAST_SCAN_INTERVAL.total_seconds())
     )

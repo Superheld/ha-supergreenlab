@@ -62,8 +62,14 @@ hardware is "in" a box. Four distinct relationships:
 | time | light on / off | `BOX_x_ON_HOUR`+`ON_MIN`, `OFF_HOUR`+`OFF_MIN` |
 | number | fan curve, watering, season, Emerson, calibration, valve, status LED | many |
 | select | LED spectrum, timer mode, sensor & fan sources, motor source | `LED_n_TYPE`, `BOX_x_TIMER_TYPE`, `*_SOURCE` |
-| switch | LED fade, Emerson, fast PWM, motor curve | `LED_n_FADE`, `BOX_x_TIMER_EMERSON_POWER`, `LEDS_FASTMODE`, `MOTORS_CURVE` |
+| switch | LED fade, Emerson, fast PWM, motor curve; **sunglasses** (synthetic) | `LED_n_FADE`, `BOX_x_TIMER_EMERSON_POWER`, `LEDS_FASTMODE`, `MOTORS_CURVE`, `BOX_x_LED_DIM` |
 | button | restart controller | `REBOOT` |
+
+The **sunglasses** switch (`SuperGreenSunglassesSwitch` in `switch.py`) is
+synthetic: `BOX_x_LED_DIM` is a unix timestamp, so on=stamp now, off=0, and
+`is_on = now - ts < 1200` (it self-clears after ~20 min on the next poll). The
+key is polled fast (added in `build_coordinators`). Useful as an automation
+target/condition for a "working in the box" mode.
 
 Diagnostics: `STATE`, `N_RESTARTS`, `*_PRESENT`.
 

@@ -120,6 +120,22 @@ async def test_light_phase_derived_from_times(hass: HomeAssistant, setup_entry, 
     assert hass.states.get(eid).state == "Vegetative"
 
 
+async def test_sunglasses_switch(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "switch", "BOX_0_SUNGLASSES")
+    assert eid
+    assert hass.states.get(eid).state == "off"  # timestamp 0 -> inactive
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": eid}, blocking=True
+    )
+    assert store["BOX_0_LED_DIM"] > 0  # stamped with current time
+    assert hass.states.get(eid).state == "on"
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": eid}, blocking=True
+    )
+    assert store["BOX_0_LED_DIM"] == 0
+    assert hass.states.get(eid).state == "off"
+
+
 async def test_number_writes_value(hass: HomeAssistant, setup_entry, store):
     eid = _entity_id(hass, "number", "BOX_0_FAN_MIN")
     await hass.services.async_call(

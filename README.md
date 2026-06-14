@@ -78,6 +78,9 @@ curves and the rest appear as settings on the controller's device page
 - **Sensor source dropdowns** list only the sensors the controller detects as
   present at their ports — not every theoretical option. If detection finds none
   of a kind, all are shown so you can still set it up.
+- **Sunglasses mode** (a switch per box) dims the box's lights for ~20 minutes so
+  you can work inside without being blinded; it clears itself afterwards. Handy in
+  automations — e.g. turn it on when a door sensor opens.
 
 ## Troubleshooting
 
