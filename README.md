@@ -24,19 +24,30 @@ adjustable via the integration's options.
 | sensor | Temperature / Humidity / VPD / CO2 | `BOX_x_TEMP/HUMI/VPD/CO2` | VPD in kPa (raw ÷ 100) |
 | sensor | Exhaust / Intake fan, Light output | `BOX_x_BLOWER_DUTY` / `FAN_DUTY` / `TIMER_OUTPUT` | actual %, read-only |
 | binary_sensor | Light on | `BOX_x_TIMER_OUTPUT` | on when schedule output > 0 |
+| time | Light on / off time | `BOX_x_ON_HOUR`+`ON_MIN`, `OFF_HOUR`+`OFF_MIN` | hour & minute merged into one HH:MM control |
+
+### Device layout (integration options)
+
+The structural choices — **which boxes are enabled** and **which LED channel
+belongs to which box** — live in the integration's options, not as entities:
+they decide which entities exist, are rarely changed, and would otherwise
+clutter the device with controls for boxes/channels you don't use.
+
+*Settings → Devices & Services → SuperGreenLab Controller → Configure →
+**Device layout*** lets you toggle boxes and assign each LED channel. The chosen
+layout is written to the controller (the single source of truth) and the entities
+are rebuilt afterwards.
 
 ### Configuration (device page → Configuration)
 
-Everything the controller itself stores is mirrored as a config entity — the
-device stays the single source of truth, nothing is duplicated in the
-integration options.
+Operational settings the controller stores are mirrored as config entities —
+the device stays the source of truth, nothing is duplicated.
 
 | Platform | Entity | Firmware key |
 |---|---|---|
-| select | LED → box assignment | `LED_n_BOX` (reloads to add/remove the light) |
 | select | Timer mode, sensor sources, fan sources | `BOX_x_TIMER_TYPE`, `*_SOURCE` (decoded to readable options) |
-| switch | Box enabled, LED fast PWM, motor curve | `BOX_x_ENABLED`, `LEDS_FASTMODE`, `MOTORS_CURVE` |
-| number | Schedule, ventilation curve, watering, season, calibration, motors, valve | `BOX_x_ON_HOUR` … and many more |
+| switch | LED fast PWM, motor curve | `LEDS_FASTMODE`, `MOTORS_CURVE` |
+| number | Ventilation curve, watering, season, calibration, motors, valve | many |
 
 Disabled-by-default entities exist for less common keys (per-port leaf offsets,
 load-cell calibration, valve, motors) — enable them in the entity settings when

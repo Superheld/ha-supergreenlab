@@ -22,6 +22,28 @@
     "step": {
       "init": {
         "title": "SuperGreenLab options",
+        "menu_options": {
+          "layout": "Device layout (boxes & lights)",
+          "settings": "Polling settings"
+        }
+      },
+      "layout": {
+        "title": "Device layout",
+        "description": "Enable the grow boxes you use and assign each LED channel to a box. This is written to the controller; entities are rebuilt afterwards.",
+        "data": {
+          "box_0": "Box 0 enabled",
+          "box_1": "Box 1 enabled",
+          "box_2": "Box 2 enabled",
+          "led_0": "Light channel 0",
+          "led_1": "Light channel 1",
+          "led_2": "Light channel 2",
+          "led_3": "Light channel 3",
+          "led_4": "Light channel 4",
+          "led_5": "Light channel 5"
+        }
+      },
+      "settings": {
+        "title": "Polling settings",
         "description": "How often to poll live readings (temperature, humidity, fan speeds). Config values are polled less frequently.",
         "data": {
           "fast_interval": "Live polling interval (seconds)"

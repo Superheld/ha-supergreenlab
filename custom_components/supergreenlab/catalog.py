@@ -26,16 +26,15 @@ from dataclasses import dataclass, field
 
 from .const import MAX_BOXES, MAX_LED_CHANNELS, VPD_DIVISOR
 from .sources import (
-    LED_BOX_MAP,
     SOURCE_MAPS,
     STATE_MAP,
     TIMER_TYPE_MAP,
     VALVE_MODE_MAP,
 )
 
-# Structural keys: changing them adds/removes other entities, so the config
-# entry is reloaded after a write to re-run discovery.
-STRUCTURAL_KEYS = {"LED_{led}_BOX", "BOX_{box}_ENABLED"}
+# Structural keys (which boxes/channels exist) are handled by the options flow,
+# not by entities, so no entity write needs to trigger a reload.
+STRUCTURAL_KEYS: set[str] = set()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,6 +45,8 @@ class EntityDef:
     key: str
     name: str
     scope: str
+    # second key, used by the time platform (hour = key, minute = key2)
+    key2: str | None = None
     # Polling speed: live readings poll fast, config polls slow.
     fast: bool = False
     category: str | None = None  # None | "config" | "diagnostic"
@@ -127,15 +128,6 @@ BINARY_SENSORS: tuple[EntityDef, ...] = (
 _CFG = dict(category="config")
 
 NUMBERS: tuple[EntityDef, ...] = (
-    # schedule
-    EntityDef(platform="number", key="BOX_{box}_ON_HOUR", name="Box {box} On hour",
-              scope="box", max=23, icon="mdi:weather-sunset-up", **_CFG),
-    EntityDef(platform="number", key="BOX_{box}_ON_MIN", name="Box {box} On minute",
-              scope="box", max=59, **_CFG),
-    EntityDef(platform="number", key="BOX_{box}_OFF_HOUR", name="Box {box} Off hour",
-              scope="box", max=23, icon="mdi:weather-sunset-down", **_CFG),
-    EntityDef(platform="number", key="BOX_{box}_OFF_MIN", name="Box {box} Off minute",
-              scope="box", max=59, **_CFG),
     # ventilation curve
     EntityDef(platform="number", key="BOX_{box}_BLOWER_MIN", name="Box {box} Exhaust fan min",
               scope="box", unit="%", icon="mdi:fan-chevron-down", **_CFG),
@@ -214,8 +206,6 @@ SELECTS: tuple[EntityDef, ...] = (
               scope="box", options_map=SOURCE_MAPS["fan_ref"], **_CFG),
     EntityDef(platform="select", key="BOX_{box}_BLOWER_REF_SOURCE", name="Box {box} Exhaust fan source",
               scope="box", options_map=SOURCE_MAPS["blower_ref"], **_CFG),
-    EntityDef(platform="select", key="LED_{led}_BOX", name="Light {led} assignment",
-              scope="led", options_map=LED_BOX_MAP, icon="mdi:led-strip-variant", **_CFG),
     EntityDef(platform="select", key="MOTOR_{motor}_SOURCE", name="Motor {motor} source",
               scope="motor", options_map=SOURCE_MAPS["motor_input"], enabled_default=False, **_CFG),
     EntityDef(platform="select", key="VALVE_MODE", name="Valve mode", scope="valve",
@@ -229,12 +219,21 @@ SELECTS: tuple[EntityDef, ...] = (
 # --- switches (config) -----------------------------------------------------
 
 SWITCHES: tuple[EntityDef, ...] = (
-    EntityDef(platform="switch", key="BOX_{box}_ENABLED", name="Box {box} enabled",
-              scope="box_all", icon="mdi:grid", **_CFG),
     EntityDef(platform="switch", key="LEDS_FASTMODE", name="LED fast PWM", scope="device",
               enabled_default=False, **_CFG),
     EntityDef(platform="switch", key="MOTORS_CURVE", name="Motor soft curve", scope="device",
               enabled_default=False, **_CFG),
+)
+
+# --- times (writable schedule, hour+minute merged) ------------------------
+
+TIMES: tuple[EntityDef, ...] = (
+    EntityDef(platform="time", key="BOX_{box}_ON_HOUR", key2="BOX_{box}_ON_MIN",
+              name="Box {box} Light on time", scope="box",
+              icon="mdi:weather-sunset-up", **_CFG),
+    EntityDef(platform="time", key="BOX_{box}_OFF_HOUR", key2="BOX_{box}_OFF_MIN",
+              name="Box {box} Light off time", scope="box",
+              icon="mdi:weather-sunset-down", **_CFG),
 )
 
 ALL_DEFS: tuple[EntityDef, ...] = (
@@ -243,6 +242,7 @@ ALL_DEFS: tuple[EntityDef, ...] = (
     *NUMBERS,
     *SELECTS,
     *SWITCHES,
+    *TIMES,
 )
 
 

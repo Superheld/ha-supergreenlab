@@ -19,8 +19,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SuperGreenAPI, SuperGreenApiError
-from .const import CONF_FAST_INTERVAL, CONF_HOST, DOMAIN, FAST_SCAN_INTERVAL
+from .const import (
+    CONF_FAST_INTERVAL,
+    CONF_HOST,
+    DOMAIN,
+    FAST_SCAN_INTERVAL,
+    MAX_BOXES,
+    MAX_LED_CHANNELS,
+)
 from .coordinator import async_detect_device
+from .sources import LED_BOX_MAP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,14 +94,68 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class SuperGreenOptionsFlow(OptionsFlow):
-    """Handle integration-level options (HA-side only)."""
+    """Integration options: device layout (structural) and HA-side settings.
+
+    Box enable/disable and LED-to-box assignment live here rather than as
+    entities: they are structural (they decide which entities exist), rarely
+    changed, and would otherwise clutter the device page with controls for
+    boxes/channels that aren't in use. The controller stays the source of
+    truth — this step writes the chosen layout to the device and the entry is
+    reloaded to re-discover entities.
+    """
+
+    def _api(self) -> SuperGreenAPI:
+        session = async_get_clientsession(self.hass)
+        return SuperGreenAPI(
+            self.config_entry.data[CONF_HOST],
+            session,
+            auth=self.config_entry.data.get(CONF_AUTH),
+        )
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Show the options menu."""
+        return self.async_show_menu(step_id="init", menu_options=["layout", "settings"])
+
+    async def async_step_layout(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Enable/disable boxes and assign LED channels to boxes."""
+        api = self._api()
+        label_to_box = {v: k for k, v in LED_BOX_MAP.items()}
+
+        if user_input is not None:
+            for box in range(MAX_BOXES):
+                await api.set_int(f"BOX_{box}_ENABLED", 1 if user_input[f"box_{box}"] else 0)
+            for led in range(MAX_LED_CHANNELS):
+                await api.set_int(f"LED_{led}_BOX", label_to_box[user_input[f"led_{led}"]])
+            # Persisting the chosen layout makes the options change, which
+            # reloads the entry and re-runs discovery against the device.
+            return self.async_create_entry(
+                data={**self.config_entry.options, "layout": user_input}
+            )
+
+        led_options = list(LED_BOX_MAP.values())
+        schema_dict: dict[Any, Any] = {}
+        for box in range(MAX_BOXES):
+            enabled = await api.get_int(f"BOX_{box}_ENABLED")
+            schema_dict[vol.Required(f"box_{box}", default=enabled == 1)] = bool
+        for led in range(MAX_LED_CHANNELS):
+            raw = await api.get_int(f"LED_{led}_BOX")
+            default = LED_BOX_MAP.get(raw if raw is not None else -1, LED_BOX_MAP[-1])
+            schema_dict[vol.Required(f"led_{led}", default=default)] = vol.In(led_options)
+
+        return self.async_show_form(step_id="layout", data_schema=vol.Schema(schema_dict))
+
+    async def async_step_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the live-polling interval."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            return self.async_create_entry(
+                data={**self.config_entry.options, **user_input}
+            )
 
         current = self.config_entry.options.get(
             CONF_FAST_INTERVAL, int(FAST_SCAN_INTERVAL.total_seconds())
@@ -105,4 +167,4 @@ class SuperGreenOptionsFlow(OptionsFlow):
                 )
             }
         )
-        return self.async_show_form(step_id="init", data_schema=schema)
+        return self.async_show_form(step_id="settings", data_schema=schema)

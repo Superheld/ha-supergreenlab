@@ -131,8 +131,10 @@ def build_coordinators(
     fast_keys: set[str] = set()
     slow_keys: set[str] = set()
     for d, ph in expand(ALL_DEFS, device):
-        key = d.key.format(**ph)
-        (fast_keys if d.fast else slow_keys).add(key)
+        target = fast_keys if d.fast else slow_keys
+        target.add(d.key.format(**ph))
+        if d.key2 is not None:
+            target.add(d.key2.format(**ph))
 
     # LED dim levels back the light entities and should stay fresh.
     for led in device.led_to_box:
