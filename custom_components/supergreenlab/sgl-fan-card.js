@@ -2,33 +2,40 @@
  * SuperGreenLab Fan Card — a mode-aware Lovelace card for one fan/blower.
  *
  * Renders a native Home Assistant `entities` card and decides which rows to
- * show based on the selected mode (Manual → speed; Timer → speed range;
- * Temperature/Humidity/VPD/CO2 → reference range + speed range). Using the
- * built-in card means the dropdown/sliders look and behave natively.
+ * show based on the selected mode:
+ *   Manual      -> speed
+ *   Timer       -> schedule on/off times + speed range
+ *   Temperature -> current temperature + reference range + speed range
+ *   Humidity / VPD / CO2 -> like Temperature with the matching metric
  *
- * Config: just the `mode` entity; the reference/speed/current entities and a
- * title are resolved automatically (legacy entity ids supported). Explicit ids
- * in the config win.
+ * Config: just the `mode` entity; the other entities and a title are resolved
+ * automatically (legacy entity ids supported). Explicit ids in the config win.
  */
 
 const MODE_FIELDS = {
   Manual: ["speed_min"],
-  Timer: ["speed_min", "speed_max"],
+  Timer: ["on_time", "off_time", "speed_min", "speed_max"],
   Temperature: ["reference_from", "reference_to", "speed_min", "speed_max"],
   Humidity: ["reference_from", "reference_to", "speed_min", "speed_max"],
   VPD: ["reference_from", "reference_to", "speed_min", "speed_max"],
   CO2: ["reference_from", "reference_to", "speed_min", "speed_max"],
 };
 
+// The live reference reading to show (read-only) for each mode.
+const MODE_REF_SENSOR = {
+  Temperature: "ref_temp",
+  Humidity: "ref_humi",
+  VPD: "ref_vpd",
+  CO2: "ref_co2",
+};
+
 // Resolve sibling entities from the mode entity. Siblings are matched by the
 // same *device* (robust against mismatched entity-id prefixes, e.g. a renamed
-// mode entity), plus the fan kind, box index and a role suffix. Falls back to
-// id-substring matching if the entity registry isn't available. Accepts both
-// current and legacy role suffixes (entity ids don't change on rename).
+// mode entity), plus — for fan-specific entities — the fan kind, the box index
+// and a role suffix. Box/time/climate entities skip the kind filter. Accepts
+// both current and legacy names (entity ids don't change on rename).
 function resolveConfig(hass, config) {
   const modeId = config.mode;
-  // Disambiguate fan (in-box) vs blower (exhaust). New ids use fan/blower;
-  // upgraded installs may still use the old intake/exhaust wording.
   let kind = "fan";
   let title = "Fan";
   if (modeId.includes("blower")) [kind, title] = ["blower", "Blower"];
@@ -37,11 +44,11 @@ function resolveConfig(hass, config) {
   const boxToken = (modeId.match(/box_\d+/) || [])[0];
   const deviceId = hass.entities?.[modeId]?.device_id;
 
-  const scan = (domain, suffixes, useBox) => {
+  const scan = (domain, suffixes, useBox, requireKind) => {
     for (const id of Object.keys(hass.states)) {
       if (!id.startsWith(`${domain}.`)) continue;
       if (deviceId && hass.entities?.[id]?.device_id !== deviceId) continue;
-      if (!id.includes(kind)) continue;
+      if (requireKind && !id.includes(kind)) continue;
       if (useBox && boxToken && !id.includes(boxToken)) continue;
       if (suffixes.some((s) => id.endsWith(s))) return id;
     }
@@ -49,8 +56,9 @@ function resolveConfig(hass, config) {
   };
   // Prefer the matching box (multi-box safe); fall back to ignoring the box
   // token for installs whose entity ids are inconsistent (e.g. renamed).
-  const find = (domain, suffixes) =>
-    scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
+  const find = (domain, suffixes, requireKind = true) =>
+    scan(domain, suffixes, true, requireKind) ??
+    scan(domain, suffixes, false, requireKind);
 
   return {
     title,
@@ -59,6 +67,13 @@ function resolveConfig(hass, config) {
     speed_min: find("number", ["speed_min", "fan_min", "blower_min"]),
     speed_max: find("number", ["speed_max", "fan_max", "blower_max"]),
     current: find("sensor", ["_fan", "_blower"]),
+    // box-level entities (not fan/blower specific)
+    on_time: find("time", ["on_time"], false),
+    off_time: find("time", ["off_time"], false),
+    ref_temp: find("sensor", ["_temperature"], false),
+    ref_humi: find("sensor", ["_humidity"], false),
+    ref_vpd: find("sensor", ["_vpd"], false),
+    ref_co2: find("sensor", ["_co2"], false),
     ...config,
   };
 }
@@ -92,11 +107,14 @@ class SglFanCard extends HTMLElement {
     const mode = modeState ? modeState.state : undefined;
     const fields = MODE_FIELDS[mode] || ["speed_min", "speed_max"];
 
+    const has = (id) => id && hass.states[id];
     const entities = [];
-    if (c.current && hass.states[c.current]) entities.push(c.current);
+    if (has(c.current)) entities.push(c.current);
     entities.push(c.mode);
+    const refSensor = MODE_REF_SENSOR[mode];
+    if (refSensor && has(c[refSensor])) entities.push(c[refSensor]);
     for (const f of fields) {
-      if (c[f] && hass.states[c[f]]) entities.push(c[f]);
+      if (has(c[f])) entities.push(c[f]);
     }
 
     const key = entities.join(",");
