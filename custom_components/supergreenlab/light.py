@@ -57,12 +57,12 @@ class SuperGreenLight(SuperGreenEntity, LightEntity):
         self, coordinator: SuperGreenDataUpdateCoordinator, led: int, box: int
     ) -> None:
         """Bind to an LED channel's dim key."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, box=box)
         self._led = led
         self._key = f"LED_{led}_DIM"
         # Remember the last non-zero level so turn_on can restore it.
         self._last_dim = 100
-        self._attr_name = f"Box {box} Light {led}"
+        self._attr_name = f"Light {led}"
         self._attr_unique_id = self._unique_id(self._key)
 
     @property

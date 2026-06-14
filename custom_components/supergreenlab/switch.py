@@ -69,10 +69,10 @@ class SuperGreenSunglassesSwitch(SuperGreenEntity, SwitchEntity):
         self, coordinator: SuperGreenDataUpdateCoordinator, box: int
     ) -> None:
         """Bind to a box's sunglasses timestamp key."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, box=box)
         self._box = box
         self._key = f"BOX_{box}_LED_DIM"
-        self._attr_name = f"Box {box} Sunglasses mode"
+        self._attr_name = "Sunglasses mode"
         self._attr_unique_id = self._unique_id(f"BOX_{box}_SUNGLASSES")
 
     @property

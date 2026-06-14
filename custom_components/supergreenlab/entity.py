@@ -1,10 +1,11 @@
 """Base entities for the SuperGreenLab Controller integration.
 
-There is a single HA device: the controller (the thing we address over the
-network). A "box" is not a device — it's a logical slot (0..2) on the
-controller into which hardware is wired. Box membership is therefore just a
-naming convention on the entities ("Box 0 …"); users can group boxes spatially
-with HA Areas.
+The controller is the parent HA device; each enabled **box** is its own
+sub-device (linked via ``via_device``), so HA groups a box's entities together
+natively. Box entities therefore carry short names ("Temperature", "Fan mode")
+and the box device supplies the "Box 0" context — which also keeps entity ids
+clean (``sensor.box_0_temperature``, no controller-name prefix). Controller-wide
+things (state, restart, valve, motors) stay on the controller device.
 """
 
 from __future__ import annotations
@@ -24,7 +25,7 @@ _CATEGORY = {
 
 
 def controller_device_info(device: SGLDevice, host: str) -> DeviceInfo:
-    """Device info for the controller (the only device)."""
+    """Device info for the controller (the parent device)."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.client_id)},
         name=device.name,
@@ -34,17 +35,42 @@ def controller_device_info(device: SGLDevice, host: str) -> DeviceInfo:
     )
 
 
+def box_device_info(device: SGLDevice, box: int) -> DeviceInfo:
+    """Device info for one grow box, linked under the controller."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, f"{device.client_id}_box_{box}")},
+        name=f"Box {box}",
+        manufacturer=MANUFACTURER,
+        model="Grow box",
+        via_device=(DOMAIN, device.client_id),
+    )
+
+
+def _box_for(device: SGLDevice, placeholders: dict[str, int]) -> int | None:
+    """Which box (if any) an instance belongs to, for device assignment."""
+    if "box" in placeholders:
+        return placeholders["box"]
+    if "led" in placeholders:
+        return device.led_to_box.get(placeholders["led"])
+    return None
+
+
 class SuperGreenEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
-    """Base for hand-written entities (light)."""
+    """Base for hand-written entities (light, synthetic selects/switches/…)."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: SuperGreenDataUpdateCoordinator) -> None:
-        """Initialise shared device info."""
+    def __init__(
+        self, coordinator: SuperGreenDataUpdateCoordinator, box: int | None = None
+    ) -> None:
+        """Attach to a box sub-device when ``box`` is given, else the controller."""
         super().__init__(coordinator)
-        self._attr_device_info = controller_device_info(
-            coordinator.device, coordinator.api.host
-        )
+        if box is not None:
+            self._attr_device_info = box_device_info(coordinator.device, box)
+        else:
+            self._attr_device_info = controller_device_info(
+                coordinator.device, coordinator.api.host
+            )
 
     def _unique_id(self, suffix: str) -> str:
         return f"{self.coordinator.device.client_id}_{suffix}"
@@ -67,9 +93,16 @@ class SGLCatalogEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
         self._def = definition
         self._key = definition.key.format(**placeholders)
         self._structural = is_structural(definition.key)
-        self._attr_name = definition.name.format(**placeholders)
+        name = definition.name.format(**placeholders)
+        box = _box_for(device, placeholders)
+        if box is not None:
+            self._attr_device_info = box_device_info(device, box)
+            # The box device supplies the "Box N" context; drop it from the name.
+            name = name.removeprefix(f"Box {box} ")
+        else:
+            self._attr_device_info = controller_device_info(device, coordinator.api.host)
+        self._attr_name = name
         self._attr_unique_id = f"{device.client_id}_{self._key}"
-        self._attr_device_info = controller_device_info(device, coordinator.api.host)
         self._attr_entity_category = _CATEGORY.get(definition.category)
         self._attr_entity_registry_enabled_default = definition.enabled_default
         if definition.icon:

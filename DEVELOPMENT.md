@@ -21,12 +21,18 @@ default the API is open on the LAN.
 
 ## Device & entity model
 
-- **One HA device: the controller.** A *box* is not a device — it's a logical
-  slot (0..2) on the controller into which hardware is wired. The firmware has
-  no "box" object; a box is just the set of flat keys prefixed `BOX_N_` plus
-  pointer fields (`LED_x_BOX`, `BOX_x_*_SOURCE`) that map hardware to a box.
-  Box membership therefore shows only as an entity name prefix; users group
-  boxes spatially with HA Areas.
+- **Controller device + per-box sub-devices.** The controller is the parent HA
+  device; each *enabled* box is a sub-device (`box_device_info`, linked via
+  `via_device`, identifier `<client_id>_box_<n>`). So HA groups a box's entities
+  natively, box entities carry short names ("Temperature", "Fan mode" — the box
+  device supplies the "Box N" context), and entity ids stay clean
+  (`sensor.box_0_temperature`, no controller-name prefix). `entity.py` assigns
+  the device: `_box_for()` maps an instance to its box (`box` placeholder, or the
+  LED's box for `led_box` scope), else the controller. The firmware itself has no
+  "box" object — a box is just flat `BOX_N_*` keys plus pointer fields
+  (`LED_x_BOX`, `BOX_x_*_SOURCE`). Controller-wide entities (state, restart,
+  valve, motors, status LED) stay on the controller device. Assign each box
+  device to its own Area for room grouping.
 - **Declarative catalog.** Every entity is declared once in `catalog.py`
   (`EntityDef`): platform, templated key(s), scope, scaling, option map,
   category and polling speed. The platform modules expand the catalog over the

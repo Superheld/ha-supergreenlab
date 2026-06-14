@@ -16,8 +16,11 @@ For each grow box configured on your controller:
 - ⚙️ Plus watering, weight, LED spectrum, sensor sources and the controller's
   other settings, and a restart button
 
-Everything lives on a single Home Assistant **device** (the controller). A
-*box* is a logical slot on the controller, shown as a name prefix (“Box 0 …”).
+The controller is the parent Home Assistant **device**, and **each enabled box is
+its own sub-device** under it ("Box 0", "Box 1", …). So a box's entities are
+grouped together automatically, their names stay short ("Temperature", "Fan
+mode"), and you can assign each box to its own **Area**. Controller-wide things
+(restart, state, valve, motors) live on the controller device.
 
 ## Installation (HACS)
 
@@ -63,8 +66,8 @@ you use and assign each LED channel to a box. Sensor sources, schedules, fan
 curves and the rest appear as settings on the controller's device page
 (under *Configuration*).
 
-> 💡 Tip: add a box's entities to a Home Assistant **Area** to group them by
-> physical space.
+> 💡 Tip: assign each **box device** to a Home Assistant **Area** to place it in
+> its physical room.
 
 ## What the entities do
 
