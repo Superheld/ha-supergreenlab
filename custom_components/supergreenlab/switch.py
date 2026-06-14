@@ -8,8 +8,8 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .catalog import SWITCHES, EntityDef, expand
-from .coordinator import SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator, SGLDevice
+from .catalog import SWITCHES, expand
+from .coordinator import SuperGreenConfigEntry
 from .entity import SGLCatalogEntity
 
 

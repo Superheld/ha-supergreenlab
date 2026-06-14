@@ -21,8 +21,7 @@ concrete instances at setup time:
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from .const import MAX_BOXES, MAX_LED_CHANNELS, VPD_DIVISOR
 from .sources import (

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .catalog import TIMES, EntityDef, expand
-from .coordinator import SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator, SGLDevice
+from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator
 from .entity import SGLCatalogEntity
 
 

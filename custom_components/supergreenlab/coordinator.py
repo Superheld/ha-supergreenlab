@@ -19,9 +19,9 @@ from .const import (
     KEY_CLIENT_ID,
     KEY_DEVICE_NAME,
     KEY_LED_BOX,
-    SLOW_SCAN_INTERVAL,
     MAX_BOXES,
     MAX_LED_CHANNELS,
+    SLOW_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)

@@ -117,7 +117,7 @@ class SuperGreenAPI:
         except aiohttp.ClientError as err:
             raise SuperGreenApiError(f"Connection error: {err}") from err
         except TimeoutError as err:
-            raise SuperGreenApiError(f"Timeout fetching config.json") from err
+            raise SuperGreenApiError("Timeout fetching config.json") from err
         try:
             return json.loads(text)
         except json.JSONDecodeError as err:
