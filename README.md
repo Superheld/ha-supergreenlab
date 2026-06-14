@@ -16,6 +16,11 @@ fan speeds, …) every 30 s by default, and **config** values every 180 s
 (they also update instantly when you change them from HA). The live interval is
 adjustable via the integration's options.
 
+**Each enabled grow box becomes its own HA device** linked under the controller,
+so everything for a box — its sensors, lights, spectrum, sources and schedule —
+is grouped on one page. Global items (state, reboot, valve, motors) stay on the
+controller device.
+
 ### Controls & sensors (dashboard)
 
 | Platform | Entity | Firmware key | Notes |
@@ -45,13 +50,14 @@ the device stays the source of truth, nothing is duplicated.
 
 | Platform | Entity | Firmware key |
 |---|---|---|
-| select | Timer mode, sensor sources, fan sources | `BOX_x_TIMER_TYPE`, `*_SOURCE` (decoded to readable options) |
-| switch | LED fast PWM, motor curve | `LEDS_FASTMODE`, `MOTORS_CURVE` |
-| number | Ventilation curve, watering, season, calibration, motors, valve | many |
+| select | LED spectrum, timer mode, sensor & fan sources, motor source | `LED_n_TYPE`, `BOX_x_TIMER_TYPE`, `*_SOURCE` (decoded to readable options) |
+| switch | LED fade, Emerson effect, LED fast PWM, motor curve | `LED_n_FADE`, `BOX_x_TIMER_EMERSON_POWER`, `LEDS_FASTMODE`, `MOTORS_CURVE` |
+| number | Ventilation curve, watering, season, Emerson ratio, calibration, motors, valve, status LED | many |
+| button | Restart controller | `REBOOT` |
 
 Disabled-by-default entities exist for less common keys (per-port leaf offsets,
-load-cell calibration, valve, motors) — enable them in the entity settings when
-you need them.
+load-cell calibration, tare, valve, motors, Emerson, status LED, manual watering)
+— enable them in the entity settings when you need them.
 
 Diagnostics: `STATE`, `N_RESTARTS`, sensor `*_PRESENT` flags.
 

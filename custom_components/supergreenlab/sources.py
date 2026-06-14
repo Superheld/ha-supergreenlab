@@ -159,4 +159,11 @@ TIMER_TYPE_MAP: dict[int, str] = {0: "Manual", 1: "On/Off schedule", 2: "Season"
 VALVE_MODE_MAP: dict[int, str] = {0: "Disabled", 1: "Keep between", 2: "Keep out"}
 STATE_MAP: dict[int, str] = {0: "First run", 1: "Idle", 2: "Running"}
 LED_BOX_MAP: dict[int, str] = {-1: "Unassigned", 0: "Box 0", 1: "Box 1", 2: "Box 2"}
+LED_TYPE_MAP: dict[int, str] = {
+    0: "Full spectrum",
+    1: "UV-A",
+    2: "Deep blue",
+    3: "Deep red",
+    4: "Far red",
+}
 

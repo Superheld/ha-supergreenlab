@@ -26,6 +26,7 @@ from dataclasses import dataclass, field
 
 from .const import MAX_BOXES, MAX_LED_CHANNELS, VPD_DIVISOR
 from .sources import (
+    LED_TYPE_MAP,
     SOURCE_MAPS,
     STATE_MAP,
     TIMER_TYPE_MAP,
@@ -134,17 +135,17 @@ NUMBERS: tuple[EntityDef, ...] = (
     EntityDef(platform="number", key="BOX_{box}_BLOWER_MAX", name="Box {box} Exhaust fan max",
               scope="box", unit="%", icon="mdi:fan-chevron-up", **_CFG),
     EntityDef(platform="number", key="BOX_{box}_BLOWER_REF_MIN", name="Box {box} Exhaust ref min",
-              scope="box", max=2000, enabled_default=False, **_CFG),
+              scope="box", max=2000, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_BLOWER_REF_MAX", name="Box {box} Exhaust ref max",
-              scope="box", max=2000, enabled_default=False, **_CFG),
+              scope="box", max=2000, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_FAN_MIN", name="Box {box} Intake fan min",
               scope="box", unit="%", icon="mdi:fan-chevron-down", **_CFG),
     EntityDef(platform="number", key="BOX_{box}_FAN_MAX", name="Box {box} Intake fan max",
               scope="box", unit="%", icon="mdi:fan-chevron-up", **_CFG),
     EntityDef(platform="number", key="BOX_{box}_FAN_REF_MIN", name="Box {box} Intake ref min",
-              scope="box", max=2000, enabled_default=False, **_CFG),
+              scope="box", max=2000, **_CFG),
     EntityDef(platform="number", key="BOX_{box}_FAN_REF_MAX", name="Box {box} Intake ref max",
-              scope="box", max=2000, enabled_default=False, **_CFG),
+              scope="box", max=2000, **_CFG),
     # watering
     EntityDef(platform="number", key="BOX_{box}_WATERING_PERIOD", name="Box {box} Watering period",
               scope="box", max=10080, unit="min", icon="mdi:water-outline",
@@ -185,6 +186,26 @@ NUMBERS: tuple[EntityDef, ...] = (
               max=5000, enabled_default=False, **_CFG),
     EntityDef(platform="number", key="VALVE_REF_MAX", name="Valve ref max", scope="valve",
               max=5000, enabled_default=False, **_CFG),
+    EntityDef(platform="number", key="VALVE_REF_ON_MIN", name="Valve on-ref min", scope="valve",
+              max=5000, enabled_default=False, **_CFG),
+    EntityDef(platform="number", key="VALVE_REF_ON_MAX", name="Valve on-ref max", scope="valve",
+              max=5000, enabled_default=False, **_CFG),
+    # Emerson (far-red) timing
+    EntityDef(platform="number", key="BOX_{box}_TIMER_EMERSON_RATIO", name="Box {box} Emerson ratio",
+              scope="box", max=1000, enabled_default=False, **_CFG),
+    # season simulation length
+    EntityDef(platform="number", key="BOX_{box}_SIM_DURATION_DAYS", name="Box {box} Season sim days",
+              scope="box", max=365, enabled_default=False, **_CFG),
+    # load-cell tare offset (raw)
+    EntityDef(platform="number", key="HX711_{n}_WEIGHT_OFFSET", name="HX711 #{n} tare offset",
+              scope="hx", min=-1000000, max=1000000, enabled_default=False, **_CFG),
+    # onboard status LED brightness
+    EntityDef(platform="number", key="STATUS_LED_DIM", name="Status LED brightness",
+              scope="device", enabled_default=False, **_CFG),
+    # manual watering trigger (set > 0 to water now)
+    EntityDef(platform="number", key="BOX_{box}_WATERING_LEFT", name="Box {box} Water now",
+              scope="box", min=-1, max=100, icon="mdi:watering-can",
+              enabled_default=False),
 )
 
 # --- selects (config, enum-backed) -----------------------------------------
@@ -206,8 +227,10 @@ SELECTS: tuple[EntityDef, ...] = (
               scope="box", options_map=SOURCE_MAPS["fan_ref"], **_CFG),
     EntityDef(platform="select", key="BOX_{box}_BLOWER_REF_SOURCE", name="Box {box} Exhaust fan source",
               scope="box", options_map=SOURCE_MAPS["blower_ref"], **_CFG),
+    EntityDef(platform="select", key="LED_{led}_TYPE", name="Light {led} spectrum",
+              scope="led_box", options_map=LED_TYPE_MAP, icon="mdi:spectrum", **_CFG),
     EntityDef(platform="select", key="MOTOR_{motor}_SOURCE", name="Motor {motor} source",
-              scope="motor", options_map=SOURCE_MAPS["motor_input"], enabled_default=False, **_CFG),
+              scope="motor", options_map=SOURCE_MAPS["motor_input"], **_CFG),
     EntityDef(platform="select", key="VALVE_MODE", name="Valve mode", scope="valve",
               options_map=VALVE_MODE_MAP, enabled_default=False, **_CFG),
     EntityDef(platform="select", key="VALVE_REF_SOURCE", name="Valve ref source", scope="valve",
@@ -223,6 +246,18 @@ SWITCHES: tuple[EntityDef, ...] = (
               enabled_default=False, **_CFG),
     EntityDef(platform="switch", key="MOTORS_CURVE", name="Motor soft curve", scope="device",
               enabled_default=False, **_CFG),
+    EntityDef(platform="switch", key="LED_{led}_FADE", name="Light {led} fade", scope="led_box",
+              enabled_default=False, **_CFG),
+    EntityDef(platform="switch", key="BOX_{box}_TIMER_EMERSON_POWER", name="Box {box} Emerson effect",
+              scope="box", enabled_default=False, **_CFG),
+)
+
+# --- buttons (momentary actions) -------------------------------------------
+# Not part of ALL_DEFS: buttons have no polled state.
+
+BUTTONS: tuple[EntityDef, ...] = (
+    EntityDef(platform="button", key="REBOOT", name="Restart controller", scope="device",
+              category="config", icon="mdi:restart", enabled_default=False),
 )
 
 # --- times (writable schedule, hour+minute merged) ------------------------
