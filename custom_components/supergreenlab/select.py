@@ -8,8 +8,6 @@ Two kinds of select:
   reference source plus sensible reference-range presets in one go, mirroring
   the SuperGreenLab app's ventilation modes (Manual / Timer / Temperature /
   Humidity / VPD / CO2).
-* a **light phase** select per box — Vegetative / Bloom / Auto presets that
-  write the on/off schedule times in one go, mirroring the app's grow phases.
 """
 
 from __future__ import annotations
@@ -25,7 +23,6 @@ from .catalog import SELECTS, EntityDef, expand
 from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator
 from .entity import SGLCatalogEntity, SuperGreenEntity
 from .sources import SOURCE_MAPS
-from .tz import device_to_local_hm, local_to_device_hm
 
 # Source-list labels that name a physical i2c sensor at a port, e.g.
 # "SHT21 temperature on port #1". The port number (#1..#3) maps to the
@@ -67,18 +64,6 @@ _MODE_KEYWORDS = (
     ("CO2", "co2"),
 )
 
-# Light schedule presets, mirroring the SuperGreenLab app's grow phases. The
-# controller only stores the four on/off time values; the phase is a pure
-# convenience layer the app keeps on its side. We don't store it either — we
-# derive the active phase from the current times (matching none -> "Custom").
-# Each preset is (on_hour, on_min, off_hour, off_min).
-_LIGHT_PHASES: dict[str, tuple[int, int, int, int]] = {
-    "Vegetative": (3, 0, 21, 0),
-    "Bloom": (6, 0, 18, 0),
-    "Auto": (2, 0, 22, 0),
-}
-_CUSTOM_PHASE = "Custom"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -94,7 +79,6 @@ async def async_setup_entry(
     for box in rt.device.boxes:
         entities.append(SuperGreenVentModeSelect(rt.slow, box, "FAN", "fan_ref"))
         entities.append(SuperGreenVentModeSelect(rt.slow, box, "BLOWER", "blower_ref"))
-        entities.append(SuperGreenLightPhaseSelect(rt.slow, box))
     async_add_entities(entities)
 
 
@@ -231,66 +215,3 @@ class SuperGreenVentModeSelect(SuperGreenEntity, SelectEntity):
         await self.coordinator.async_set_int(self._source_key, self._resolve_source(option))
         await self.coordinator.async_set_int(self._min_key, ref_min)
         await self.coordinator.async_set_int(self._max_key, ref_max)
-
-
-class SuperGreenLightPhaseSelect(SuperGreenEntity, SelectEntity):
-    """Friendly light-schedule phase: writes the on/off times in one go.
-
-    Mirrors the app's Vegetative / Bloom / Auto presets. The phase is derived
-    from the current times, so it needs no stored state and follows along when
-    the times are edited by hand (-> "Custom").
-    """
-
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:sprout"
-    _attr_options = [*_LIGHT_PHASES, _CUSTOM_PHASE]
-
-    def __init__(self, coordinator: SuperGreenDataUpdateCoordinator, box: int) -> None:
-        """Bind to a box's on/off schedule keys."""
-        super().__init__(coordinator)
-        self._box = box
-        self._on_hour = f"BOX_{box}_ON_HOUR"
-        self._on_min = f"BOX_{box}_ON_MIN"
-        self._off_hour = f"BOX_{box}_OFF_HOUR"
-        self._off_min = f"BOX_{box}_OFF_MIN"
-        self._attr_name = f"Box {box} Light phase"
-        self._attr_unique_id = self._unique_id(f"BOX_{box}_LIGHT_PHASE")
-
-    @property
-    def current_option(self) -> str | None:
-        """Match the current times against a preset, else 'Custom'.
-
-        The presets are local wall-clock times; the device stores UTC, so we
-        convert the device values to local before matching.
-        """
-        data = self.coordinator.data
-        if not data:
-            return None
-        raw = [
-            data.get(k)
-            for k in (self._on_hour, self._on_min, self._off_hour, self._off_min)
-        ]
-        if any(t is None for t in raw):
-            return None
-        on_h, on_m = device_to_local_hm(raw[0], raw[1])
-        off_h, off_m = device_to_local_hm(raw[2], raw[3])
-        times = (on_h, on_m, off_h, off_m)
-        for phase, preset in _LIGHT_PHASES.items():
-            if times == preset:
-                return phase
-        return _CUSTOM_PHASE
-
-    async def async_select_option(self, option: str) -> None:
-        """Apply a phase preset; 'Custom' is derived-only and does nothing.
-
-        Presets are local times; convert to the UTC values the device stores.
-        """
-        preset = _LIGHT_PHASES.get(option)
-        if preset is None:
-            return
-        on_hour, on_min = local_to_device_hm(preset[0], preset[1])
-        off_hour, off_min = local_to_device_hm(preset[2], preset[3])
-        await self.coordinator.async_set_int(self._on_hour, on_hour)
-        await self.coordinator.async_set_int(self._on_min, on_min)
-        await self.coordinator.async_set_int(self._off_hour, off_hour)
-        await self.coordinator.async_set_int(self._off_min, off_min)

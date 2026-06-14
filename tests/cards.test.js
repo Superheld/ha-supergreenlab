@@ -58,18 +58,18 @@ test("fan card ignores entities on a different device", () => {
   assert.equal(c.speed_min, undefined);
 });
 
-test("light card resolves phase + schedule times", () => {
+test("light card resolves schedule times + season date", () => {
   const hass = mkHass([
     "select.box_0_timer_mode",
-    "select.box_0_light_phase",
     "time.box_0_on_time",
     "time.box_0_off_time",
+    "sensor.box_0_season_date",
   ]);
   const c = resolveLightConfig(hass, { mode: "select.box_0_timer_mode" });
   assert.equal(c.title, "Box 0 light");
-  assert.equal(c.phase, "select.box_0_light_phase");
   assert.equal(c.on_time, "time.box_0_on_time");
   assert.equal(c.off_time, "time.box_0_off_time");
+  assert.equal(c.season_date, "sensor.box_0_season_date");
 });
 
 test("box card resolves sources + correlates spectrum by LED index", () => {

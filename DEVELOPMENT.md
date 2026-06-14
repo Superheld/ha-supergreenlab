@@ -57,7 +57,7 @@ hardware is "in" a box. Four distinct relationships:
 | Platform | Examples | Keys |
 |---|---|---|
 | light | brightness per LED channel | `LED_n_DIM` |
-| sensor | temp / humi / VPD / CO₂, fan duty, light output | `BOX_x_TEMP/HUMI/VPD/CO2`, `BOX_x_BLOWER_DUTY/FAN_DUTY/TIMER_OUTPUT` |
+| sensor | temp / humi / VPD / CO₂, fan duty, light output, **season date** (synthetic) | `BOX_x_TEMP/HUMI/VPD/CO2`, `BOX_x_BLOWER_DUTY/FAN_DUTY/TIMER_OUTPUT`, `BOX_x_SIMULATED_TIME` |
 | binary_sensor | light on, valve open, sensor present | `BOX_x_TIMER_OUTPUT`, `VALVE_OPEN`, `*_PRESENT` |
 | time | light on / off | `BOX_x_ON_HOUR`+`ON_MIN`, `OFF_HOUR`+`OFF_MIN` |
 | number | fan curve, watering, season, Emerson, calibration, valve, status LED | many |
@@ -113,13 +113,11 @@ times to those four keys (and, for Bloom, logs a cloud journal entry). Defaults:
 | Bloom | 06:00 | 18:00 | 12 |
 | Auto | 02:00 | 22:00 | 20 |
 
-We mirror this with a synthetic **"Light phase"** select per box
-(`SuperGreenLightPhaseSelect` in `select.py`) — "Weg 3". It stores **no** state:
-the active phase is *derived* by matching the current four times against the
-presets (no match ⇒ "Custom"), and selecting a phase writes the four times.
-Editing a time by hand therefore flips the phase to "Custom" on its own, and the
-phase survives restarts because it's read back from the device. The bundled light
-card shows it above the on/off times in On-Off schedule mode.
+We once mirrored this with a synthetic **"Light phase"** select (derive-from-
+times + write-times). It was **removed** (v0.11.0): it's not a real device
+concept, doesn't sync with the app's own phase (below), and named-the-same-thing
+caused more confusion than the one-click convenience was worth. The light card
+now just shows the raw on/off times; users pick times directly.
 
 **One-way by nature:** because the phase label lives only in the app (and its
 cloud), changing the schedule from anywhere else (HA, a second phone) updates the
@@ -154,9 +152,14 @@ instead of a fixed schedule. It compresses a real outdoor season into the grow:
 - `DURATION_DAYS` — length of the simulated season (e.g. 215).
 - `SIM_DURATION_DAYS` — how many *real* days to compress that into (e.g. 75).
 - `STARTED_AT` — unix timestamp anchor; set to *now* to (re)start the season.
-- The firmware advances `simulated_time` proportionally to real time elapsed,
-  then derives `timer_output` from a cosine of the year + day position. Exposed
-  as a **"Start season"** button (writes `STARTED_AT = now`).
+- The firmware advances `BOX_x_SIMULATED_TIME` proportionally to real time
+  elapsed, then derives `timer_output` from a cosine of the year + day position.
+- Exposed as: the four numbers + a **"Start season"** button (writes
+  `STARTED_AT = now`), and a read-only **"Season date"** timestamp sensor
+  (`SuperGreenSeasonDateSensor` in `sensor.py`, from `BOX_x_SIMULATED_TIME`,
+  polled slow) so you can see how far the season has progressed.
+- Note: `BOX_x_SIMULATED_TIME` is HTTP-readable even though it has no `keys.h`
+  macro (it's still a generated KV with HTTP enabled).
 
 ### Sensors & VPD
 

@@ -145,6 +145,11 @@ def build_coordinators(
     for box in device.boxes:
         fast_keys.add(f"BOX_{box}_LED_DIM")
 
+    # The simulated-season timestamp backs the read-only "Season date" sensor;
+    # it advances slowly, so the config (slow) coordinator is enough.
+    for box in device.boxes:
+        slow_keys.add(f"BOX_{box}_SIMULATED_TIME")
+
     fast_seconds = entry.options.get(
         CONF_FAST_INTERVAL, int(FAST_SCAN_INTERVAL.total_seconds())
     )

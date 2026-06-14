@@ -90,34 +90,14 @@ async def test_source_select_falls_back_when_none_present(
     assert "SCD30 temperature on port #3" in opts
 
 
-async def test_light_phase_sets_times(hass: HomeAssistant, setup_entry, store):
-    await hass.config.async_set_time_zone("UTC")  # identity conversion
-    eid = _entity_id(hass, "select", "BOX_0_LIGHT_PHASE")
+async def test_season_date_sensor(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "sensor", "BOX_0_SIMULATED_TIME")
     assert eid
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {"entity_id": eid, "option": "Bloom"},
-        blocking=True,
-    )
-    assert store["BOX_0_ON_HOUR"] == 6
-    assert store["BOX_0_ON_MIN"] == 0
-    assert store["BOX_0_OFF_HOUR"] == 18
-    assert store["BOX_0_OFF_MIN"] == 0
-
-
-async def test_light_phase_derived_from_times(hass: HomeAssistant, setup_entry, store):
-    await hass.config.async_set_time_zone("UTC")  # identity conversion
-    eid = _entity_id(hass, "select", "BOX_0_LIGHT_PHASE")
-    # Default store times match no preset -> Custom.
-    assert hass.states.get(eid).state == "Custom"
-    await hass.services.async_call(
-        "select",
-        "select_option",
-        {"entity_id": eid, "option": "Vegetative"},
-        blocking=True,
-    )
-    assert hass.states.get(eid).state == "Vegetative"
+    assert hass.states.get(eid).state == "unknown"  # no season running (ts 0)
+    store["BOX_0_SIMULATED_TIME"] = 1700000000
+    await setup_entry.runtime_data.slow.async_request_refresh()
+    await hass.async_block_till_done()
+    assert hass.states.get(eid).state == "2023-11-14T22:13:20+00:00"
 
 
 async def test_sunglasses_switch(hass: HomeAssistant, setup_entry, store):

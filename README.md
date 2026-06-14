@@ -82,12 +82,13 @@ disabled by default — enable them from the device page if you need them):
   length follows a simulated, slowly-shifting season). **Season is a firmware
   feature the official app doesn't offer** — here you can pick it, set the season
   parameters below, and press *Start season* to begin.
-- *Light phase* — in On/Off mode, a *Vegetative / Bloom / Auto* preset that fills
-  sensible on/off times (it's a convenience; the device only stores the times).
 - *Light on time / off time* — the actual schedule times (shown in your local
   time; see the sync note below).
 - *Season start month / day*, *Season duration*, *Season sim days*, *Start season*
-  (button) — the Season-mode parameters and the “start it now” trigger.
+  (button) — the Season-mode parameters and the “start it now” trigger (see
+  **Season mode** below).
+- *Season date* — read-only: the simulated calendar date the box is currently at
+  while a season runs (shows where the season has progressed to).
 
 **Climate (read-only)**
 - *Temperature, Humidity, VPD, CO₂* (and *Weight* if enabled) — the box's live
@@ -111,6 +112,33 @@ disabled by default — enable them from the device page if you need them):
 
 Device-wide diagnostics: *State*, *Restarts*, and *…present* flags (which i2c
 sensors the controller detects).
+
+## Season mode
+
+**Season** is a firmware light mode the official app doesn't expose — so it's
+little-known, but it's real and works. Instead of a fixed on/off schedule, the
+light follows a **simulated, slowly-shifting season**: a soft daily sunrise →
+midday → sunset curve whose day length drifts over your grow, like the sun does
+across real months. It's compressed into your actual grow length.
+
+Set it via the box's *Timer mode* → **Season**, then:
+
+- *Season start month / day* — which calendar date the simulated season starts at
+  (e.g. April 1).
+- *Season duration* — how many days of season to simulate (e.g. 215 → spring into
+  autumn).
+- *Season sim days* — over how many **real** days to compress that (= your grow
+  length, e.g. 75).
+- *Start season* (button) — press to begin from now.
+- *Season date* (read-only) — shows the simulated date the box is currently at, so
+  you can watch the season progress.
+
+Example: start *April 1*, duration *120*, sim days *60* → over 60 real days your
+plants experience the April→August light progression, 2× compressed.
+
+> Heads-up: like the on/off schedule, Season runs on the controller's clock,
+> which has no timezone — its daily peak lands at solar noon in **UTC**, so it's
+> shifted by your UTC offset until the firmware gains proper timezone support.
 
 ## App and Home Assistant don't sync live
 
@@ -189,11 +217,10 @@ mode: select.supergreencontroller_box_0_blower_mode
 
 The box's light **scheduler** (like the app's schedule screen) — point it at the
 box **Timer mode** select. Shows the mode (Manual / On/Off / Season) and *only*
-the inputs that mode needs: in **On/Off** a **Light phase** picker (*Vegetative /
-Bloom / Auto*, the app's grow-phase presets — choosing one fills sensible on/off
-times; editing a time by hand switches it to *Custom*) plus the on/off times; in
-**Season** the season settings. Per-channel brightness isn't here — those are
-the box's `light` entities (use them on the device page or a plain entities card).
+the inputs that mode needs: in **On/Off** the on/off times; in **Season** the
+current season date plus the season parameters and the *Start season* button.
+Per-channel brightness isn't here — those are the box's `light` entities (use
+them on the device page or a plain entities card).
 
 ```yaml
 type: custom:sgl-light-card

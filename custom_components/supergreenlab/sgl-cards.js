@@ -137,17 +137,20 @@ class SglFanCard extends HTMLElement {
 }
 
 // ---------------------------------------------------------------------------
-// Light card — mode-aware on the box timer type.
-//   Manual            -> lights only
-//   On/Off schedule   -> lights + on/off times
-//   Season            -> lights + season start month/day + duration
+// Light card — the box's light SCHEDULER, mode-aware on the box timer type.
+//   Manual            -> nothing extra (light is driven directly)
+//   On/Off schedule   -> on/off times
+//   Season            -> current season date + season parameters + start button
 // Anchor entity is the box "Timer mode" select; the rest is resolved per box.
 // ---------------------------------------------------------------------------
 
 const LIGHT_MODE_FIELDS = {
   Manual: [],
-  "On/Off schedule": ["phase", "on_time", "off_time"],
-  Season: ["start_month", "start_day", "duration", "sim_duration", "start_season"],
+  "On/Off schedule": ["on_time", "off_time"],
+  Season: [
+    "season_date", "start_month", "start_day", "duration", "sim_duration",
+    "start_season",
+  ],
 };
 
 export function resolveLightConfig(hass, config) {
@@ -172,9 +175,9 @@ export function resolveLightConfig(hass, config) {
   const boxNum = boxToken ? boxToken.replace("box_", "") : null;
   return {
     title: boxNum !== null ? `Box ${boxNum} light` : "Light",
-    phase: find("select", ["light_phase"]),
     on_time: find("time", ["on_time"]),
     off_time: find("time", ["off_time"]),
+    season_date: find("sensor", ["season_date"]),
     start_month: find("number", ["start_month"]),
     start_day: find("number", ["start_day"]),
     duration: find("number", ["season_duration", "duration"]),
