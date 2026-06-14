@@ -40,6 +40,18 @@ default the API is open on the LAN.
   schedules, fan curves) are entities. The controller is always the source of
   truth; the options flow writes to it and the entry reloads to re-discover.
 
+### What actually binds to a box
+
+A box is a logical control group, **not** a hardware container — only some
+hardware is "in" a box. Four distinct relationships:
+
+| Binding | Hardware / keys | Notes |
+|---|---|---|
+| **Wired to the box by index** | Fan (`BOX_x_FAN_*`), Blower (`BOX_x_BLOWER_*`), watering logic (`BOX_x_WATERING_*`), plus the light/climate *logic* (schedule, `TIMER_TYPE`, season, Emerson) | No assignment key exists — the fan/blower *is* the box's. Fixed per slot. |
+| **Assigned to a box (flexible)** | LED channels via `LED_x_BOX` (-1 = none, 0..2) | The only hardware you map into a box. A box's light = the channels pointing at it (this is the options-flow LED assignment). |
+| **Global, referenced by pointer** | Sensors: SHT21 / SCD30 / HX711 on i2c ports; a box selects one per metric via `BOX_x_{TEMP,HUMI,VPD,CO2,WEIGHT}_SOURCE` | Sensors are device-wide. A box doesn't own one — two boxes can read the same sensor. Calibration/offset lives on the sensor. |
+| **Global, unrelated to box** | Motors (`MOTOR_x_*`, follow a *source* that may be a box value), Valve (`VALVE_*`), status LED, WiFi/OTA/broker/auth, `STATE`, and the all-device flags `LEDS_FASTMODE` / `MOTORS_CURVE` | Float alongside the boxes. |
+
 ### Entities
 
 | Platform | Examples | Keys |
@@ -72,6 +84,36 @@ the encodings; they are firmware-version stable).
   and the mixer ignores it.
 - `LED_x_TYPE` is the spectrum (0 Full / 1 UV-A / 2 Deep blue / 3 Deep red /
   4 Far red); it selects which timer drives the channel in the mixer.
+- **`BOX_x_LED_DIM` is *not* a master brightness** — despite the name it's a unix
+  timestamp for the app's "Sunglasses" mode. While `now - BOX_x_LED_DIM < 1200`
+  (~20 min after pressing), channels with `LED_x_FADE` dim to ≤15 % (others to 0)
+  so you can work in the box without being blinded (`led.c`). Per-channel
+  brightness is `LED_x_DIM`.
+
+### Light schedule & grow phases
+
+The controller's light schedule is just **four numbers** per box —
+`BOX_x_{ON,OFF}_{HOUR,MIN}` — plus `TIMER_TYPE` (0 Manual / 1 On-Off / 2 Season).
+That's all it stores.
+
+The app's familiar **Vegetative / Bloom / Auto** phases are *not* a controller
+concept. They are presets the app keeps on its own side (`box.settings`,
+`SuperGreenApp2/.../box_settings.dart`); picking one simply writes the matching
+times to those four keys (and, for Bloom, logs a cloud journal entry). Defaults:
+
+| Phase | on | off | light hours |
+|---|---|---|---|
+| Vegetative | 03:00 | 21:00 | 18 |
+| Bloom | 06:00 | 18:00 | 12 |
+| Auto | 02:00 | 22:00 | 20 |
+
+We mirror this with a synthetic **"Light phase"** select per box
+(`SuperGreenLightPhaseSelect` in `select.py`) — "Weg 3". It stores **no** state:
+the active phase is *derived* by matching the current four times against the
+presets (no match ⇒ "Custom"), and selecting a phase writes the four times.
+Editing a time by hand therefore flips the phase to "Custom" on its own, and the
+phase survives restarts because it's read back from the device. The bundled light
+card shows it above the on/off times in On-Off schedule mode.
 
 ### Ventilation — Fan vs Blower
 
@@ -193,7 +235,13 @@ or manual dashboard resource is needed. Notes:
 - Cards render a native HA **`entities` card** via `loadCardHelpers()` and just
   choose which rows to show — so controls look/behave natively.
 - They are **mode-aware**: `sgl-fan-card` switches rows on the fan/blower mode;
-  `sgl-light-card` switches on the box timer type.
+  `sgl-light-card` switches on the box timer type (and shows the grow-phase
+  select in On/Off mode).
+- `sgl-box-card` is a per-box **overview/setup** card: it groups the box's
+  entities into `{type: "section"}` rows (Status / Lights / Climate sources /
+  Ventilation / Schedule). It anchors on any box entity (`entity:` or `mode:`).
+  Spectrum selects carry no box token (named `Light {led} spectrum`), so it
+  correlates them to the box via the LED index in the box's `light` entity ids.
 - **Entity resolution** is the tricky part. From the anchor `mode` entity the
   card finds siblings by **shared `device_id`** (via `hass.entities`), the fan
   *kind* (`fan`/`blower`, plus legacy `intake`/`exhaust`), a **soft** box-index
@@ -243,6 +291,19 @@ plain ESP32 (no native USB).
   `dependencies` (see cards section).
 - **The firmware code can be newer than its documented esp-idf pin** — don't
   trust the README's pinned commit for building.
+- **Boxes are fixed hardware slots, baked in at firmware build time.** The box
+  count is decided by the code generator, not at runtime: `_box_conf` in
+  `config_gen/config/SuperGreenOS/Controllers/<variant>/box.cue` is a fixed list
+  and `array_len: len(_box_conf)`. The **Controller** variant has 3 entries, the
+  **Solo** variant has 1. The generated `keys.h` then `#define`s `BOX_0_*`..
+  `BOX_2_*` individually — there is no `BOX_3`, no dynamic allocation. All start
+  `enabled = 0`; you *enable/disable* a slot (`BOX_x_ENABLED`), never create one.
+  So box structure belongs in the options flow as a fixed 0..`MAX_BOXES` set
+  (we use `MAX_BOXES = 3`), not a dynamic add/remove list, and the only
+  per-box structural choices that exist are: enable, LED-channel assignment, and
+  the sensor/motor **sources**. (Open: moving the source selects into the options
+  flow was attempted and didn't work cleanly yet — to be revisited; current state
+  keeps them as on-page selects.)
 
 ## Contributing
 

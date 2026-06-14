@@ -46,6 +46,34 @@ async def test_select_source_writes_decoded_int(hass: HomeAssistant, setup_entry
     assert store["BOX_0_TEMP_SOURCE"] == 16
 
 
+async def test_light_phase_sets_times(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "select", "BOX_0_LIGHT_PHASE")
+    assert eid
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": eid, "option": "Bloom"},
+        blocking=True,
+    )
+    assert store["BOX_0_ON_HOUR"] == 6
+    assert store["BOX_0_ON_MIN"] == 0
+    assert store["BOX_0_OFF_HOUR"] == 18
+    assert store["BOX_0_OFF_MIN"] == 0
+
+
+async def test_light_phase_derived_from_times(hass: HomeAssistant, setup_entry, store):
+    eid = _entity_id(hass, "select", "BOX_0_LIGHT_PHASE")
+    # Default store times match no preset -> Custom.
+    assert hass.states.get(eid).state == "Custom"
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": eid, "option": "Vegetative"},
+        blocking=True,
+    )
+    assert hass.states.get(eid).state == "Vegetative"
+
+
 async def test_fan_mode_sets_source_and_range(hass: HomeAssistant, setup_entry, store):
     eid = _entity_id(hass, "select", "BOX_0_FAN_MODE")
     assert eid

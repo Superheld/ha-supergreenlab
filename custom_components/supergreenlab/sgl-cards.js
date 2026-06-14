@@ -145,7 +145,7 @@ class SglFanCard extends HTMLElement {
 
 const LIGHT_MODE_FIELDS = {
   Manual: [],
-  "On/Off schedule": ["on_time", "off_time"],
+  "On/Off schedule": ["phase", "on_time", "off_time"],
   Season: ["start_month", "start_day", "duration", "sim_duration", "start_season"],
 };
 
@@ -177,6 +177,7 @@ function resolveLightConfig(hass, config) {
     title: boxNum !== null ? `Box ${boxNum} light` : "Light",
     lights,
     light_on: find("binary_sensor", ["light_on"]),
+    phase: find("select", ["light_phase"]),
     on_time: find("time", ["on_time"]),
     off_time: find("time", ["off_time"]),
     start_month: find("number", ["start_month"]),
@@ -240,8 +241,148 @@ class SglLightCard extends HTMLElement {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Box card — an overview + setup helper for one grow box. Enabling a box adds
+// a flood of new entities; this groups the box's entities into sections
+// (Status / Lights / Climate sources / Ventilation / Schedule) so you can see
+// what hardware the box has and do the key one-time setups without hunting
+// through the device page. Anchor: any entity of the box (e.g. its timer mode).
+// ---------------------------------------------------------------------------
+
+function resolveBoxConfig(hass, config) {
+  const anchorId = config.entity || config.mode;
+  const boxToken = (anchorId.match(/box_\d+/) || [])[0];
+  const boxNum = boxToken ? boxToken.replace("box_", "") : null;
+  const deviceId = hass.entities?.[anchorId]?.device_id;
+  const onDevice = (id) => !deviceId || hass.entities?.[id]?.device_id === deviceId;
+  const inBox = (id) => !boxToken || id.includes(boxToken);
+
+  const scan = (domain, suffixes, useBox) => {
+    for (const id of Object.keys(hass.states)) {
+      if (!id.startsWith(`${domain}.`)) continue;
+      if (!onDevice(id)) continue;
+      if (useBox && !inBox(id)) continue;
+      if (suffixes.some((s) => id.endsWith(s))) return id;
+    }
+    return undefined;
+  };
+  const find = (domain, suffixes) =>
+    scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
+
+  // The box's lights (they carry the box token); fall back to all on the
+  // device for installs whose ids are inconsistent.
+  const onBoxLights = Object.keys(hass.states).filter(
+    (id) => id.startsWith("light.") && onDevice(id) && inBox(id),
+  );
+  const lights = (onBoxLights.length
+    ? onBoxLights
+    : Object.keys(hass.states).filter(
+        (id) => id.startsWith("light.") && onDevice(id),
+      )
+  ).sort();
+
+  // Spectrum selects are named per-LED (no box token); correlate to this box
+  // via the LED index embedded in the box's light entity ids.
+  const spectrum = [];
+  for (const lid of lights) {
+    const n = (lid.match(/light_(\d+)$/) || [])[1];
+    if (n === undefined) continue;
+    const sid = Object.keys(hass.states).find(
+      (id) =>
+        id.startsWith("select.") &&
+        onDevice(id) &&
+        id.endsWith(`light_${n}_spectrum`),
+    );
+    if (sid) spectrum.push(sid);
+  }
+
+  return {
+    title: boxNum !== null ? `Box ${boxNum}` : "Box",
+    temp: find("sensor", ["_temperature"]),
+    humi: find("sensor", ["_humidity"]),
+    vpd: find("sensor", ["_vpd"]),
+    co2: find("sensor", ["_co2"]),
+    light_on: find("binary_sensor", ["light_on"]),
+    fan_current: find("sensor", ["_fan"]),
+    blower_current: find("sensor", ["_blower"]),
+    timer_mode: find("select", ["_timer_mode"]),
+    light_phase: find("select", ["_light_phase"]),
+    fan_mode: find("select", ["_fan_mode"]),
+    blower_mode: find("select", ["_blower_mode"]),
+    temp_source: find("select", ["_temperature_source"]),
+    humi_source: find("select", ["_humidity_source"]),
+    vpd_source: find("select", ["_vpd_source"]),
+    co2_source: find("select", ["_co2_source"]),
+    weight_source: find("select", ["_weight_source"]),
+    lights,
+    spectrum,
+    ...config,
+  };
+}
+
+class SglBoxCard extends HTMLElement {
+  setConfig(config) {
+    if (!config || !(config.entity || config.mode)) {
+      throw new Error("sgl-box-card: 'entity' (any entity of the box) is required");
+    }
+    this._rawConfig = config;
+    this._key = null;
+    this._inner = null;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._helpers) this._helpers = window.loadCardHelpers();
+    this._helpers.then((helpers) => this._render(helpers));
+  }
+
+  getCardSize() {
+    return this._inner?.getCardSize?.() ?? 6;
+  }
+
+  _render(helpers) {
+    const hass = this._hass;
+    const c = resolveBoxConfig(hass, this._rawConfig);
+    const has = (id) => id && hass.states[id];
+
+    const entities = [];
+    const section = (label, ids) => {
+      const present = ids.filter(has);
+      if (!present.length) return;
+      entities.push({ type: "section", label });
+      for (const id of present) entities.push(id);
+    };
+    section("Status", [
+      c.temp, c.humi, c.vpd, c.co2, c.light_on, c.fan_current, c.blower_current,
+    ]);
+    section("Lights", [...c.lights, ...c.spectrum]);
+    section("Climate sources", [
+      c.temp_source, c.humi_source, c.vpd_source, c.co2_source, c.weight_source,
+    ]);
+    section("Ventilation", [c.fan_mode, c.blower_mode]);
+    section("Schedule", [c.timer_mode, c.light_phase]);
+
+    const key = entities.map((e) => (typeof e === "string" ? e : e.label)).join(",");
+    if (key !== this._key) {
+      this._key = key;
+      const card = helpers.createCardElement({
+        type: "entities",
+        title: c.title,
+        entities,
+      });
+      card.hass = hass;
+      this.innerHTML = "";
+      this.appendChild(card);
+      this._inner = card;
+    } else if (this._inner) {
+      this._inner.hass = hass;
+    }
+  }
+}
+
 customElements.define("sgl-fan-card", SglFanCard);
 customElements.define("sgl-light-card", SglLightCard);
+customElements.define("sgl-box-card", SglBoxCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "sgl-light-card",
@@ -252,4 +393,9 @@ window.customCards.push({
   type: "sgl-fan-card",
   name: "SuperGreenLab Fan Card",
   description: "Mode-aware control for a SuperGreenLab fan/blower.",
+});
+window.customCards.push({
+  type: "sgl-box-card",
+  name: "SuperGreenLab Box Card",
+  description: "Overview + setup for one grow box, grouped into sections.",
 });

@@ -85,9 +85,9 @@ curves and the rest appear as settings on the controller's device page
 
 ## Bundled Lovelace cards
 
-The integration ships custom *mode-aware* cards and auto-loads them — no separate
+The integration ships for easy configuration custom *mode-aware* cards and auto-loads them — no separate
 HACS plugin and no manual dashboard resource. Each card needs only one anchor
-entity (its **mode**); the rest is resolved automatically from the same box.
+entity (its **mode**); the rest is resolved automatically from the same box. 
 
 ### `sgl-fan-card`
 
@@ -110,12 +110,29 @@ mode: select.supergreencontroller_box_0_blower_mode
 ### `sgl-light-card`
 
 For a box's **lights** — point it at the box **Timer mode** select. Shows the
-LED channels (brightness) plus, depending on the timer type, the on/off schedule
-times (On/Off) or the season settings (Season).
+LED channels (brightness) plus, depending on the timer type, the schedule
+(On/Off) or the season settings (Season). In On/Off schedule mode it also offers
+a **Light phase** picker — *Vegetative / Bloom / Auto* — the same grow-phase
+presets as the app: choosing one fills sensible on/off times (editing a time by
+hand switches it to *Custom*).
 
 ```yaml
 type: custom:sgl-light-card
 mode: select.supergreencontroller_box_0_timer_mode
+```
+
+### `sgl-box-card`
+
+A **per-box overview & setup** card. Enabling a box adds a lot of entities;
+this groups one box's entities into sections — *Status* (live climate, light on,
+fan/blower), *Lights* (channels + spectrum), *Climate sources* (which sensor
+feeds each metric), *Ventilation* (fan/blower mode) and *Schedule* — so you can
+see what hardware the box has and do the key setups in one place. Point it at any
+entity of the box (e.g. its timer mode select).
+
+```yaml
+type: custom:sgl-box-card
+entity: select.supergreencontroller_box_0_timer_mode
 ```
 
 Any derived entity or the title can be overridden explicitly in the YAML.
