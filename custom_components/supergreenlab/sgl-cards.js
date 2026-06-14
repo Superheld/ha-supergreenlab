@@ -135,8 +135,117 @@ class SglFanCard extends HTMLElement {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Light card — mode-aware on the box timer type.
+//   Manual            -> lights only
+//   On/Off schedule   -> lights + on/off times
+//   Season            -> lights + season start month/day + duration
+// Anchor entity is the box "Timer mode" select; the rest is resolved per box.
+// ---------------------------------------------------------------------------
+
+const LIGHT_MODE_FIELDS = {
+  Manual: [],
+  "On/Off schedule": ["on_time", "off_time"],
+  Season: ["start_month", "start_day", "duration"],
+};
+
+function resolveLightConfig(hass, config) {
+  const modeId = config.mode;
+  const boxToken = (modeId.match(/box_\d+/) || [])[0];
+  const deviceId = hass.entities?.[modeId]?.device_id;
+  const onDevice = (id) => !deviceId || hass.entities?.[id]?.device_id === deviceId;
+  const inBox = (id) => !boxToken || id.includes(boxToken);
+
+  const scan = (domain, suffixes, useBox) => {
+    for (const id of Object.keys(hass.states)) {
+      if (!id.startsWith(`${domain}.`)) continue;
+      if (!onDevice(id)) continue;
+      if (useBox && !inBox(id)) continue;
+      if (suffixes.some((s) => id.endsWith(s))) return id;
+    }
+    return undefined;
+  };
+  const find = (domain, suffixes) =>
+    scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
+
+  const lights = Object.keys(hass.states)
+    .filter((id) => id.startsWith("light.") && onDevice(id) && inBox(id))
+    .sort();
+
+  const boxNum = boxToken ? boxToken.replace("box_", "") : null;
+  return {
+    title: boxNum !== null ? `Box ${boxNum} light` : "Light",
+    lights,
+    light_on: find("binary_sensor", ["light_on"]),
+    on_time: find("time", ["on_time"]),
+    off_time: find("time", ["off_time"]),
+    start_month: find("number", ["start_month"]),
+    start_day: find("number", ["start_day"]),
+    duration: find("number", ["season_duration", "duration"]),
+    ...config,
+  };
+}
+
+class SglLightCard extends HTMLElement {
+  setConfig(config) {
+    if (!config || !config.mode) {
+      throw new Error("sgl-light-card: 'mode' (timer mode select) is required");
+    }
+    this._rawConfig = config;
+    this._key = null;
+    this._inner = null;
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (!this._helpers) this._helpers = window.loadCardHelpers();
+    this._helpers.then((helpers) => this._render(helpers));
+  }
+
+  getCardSize() {
+    return this._inner?.getCardSize?.() ?? 3;
+  }
+
+  _render(helpers) {
+    const hass = this._hass;
+    const c = resolveLightConfig(hass, this._rawConfig);
+    const mode = hass.states[c.mode]?.state;
+    const has = (id) => id && hass.states[id];
+
+    const entities = [];
+    if (has(c.light_on)) entities.push(c.light_on);
+    entities.push(c.mode);
+    for (const l of c.lights) entities.push(l);
+    for (const f of LIGHT_MODE_FIELDS[mode] || []) {
+      if (has(c[f])) entities.push(c[f]);
+    }
+
+    const key = entities.join(",");
+    if (key !== this._key) {
+      this._key = key;
+      const card = helpers.createCardElement({
+        type: "entities",
+        title: c.title,
+        entities,
+      });
+      card.hass = hass;
+      this.innerHTML = "";
+      this.appendChild(card);
+      this._inner = card;
+    } else if (this._inner) {
+      this._inner.hass = hass;
+    }
+  }
+}
+
 customElements.define("sgl-fan-card", SglFanCard);
+customElements.define("sgl-light-card", SglLightCard);
 window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "sgl-light-card",
+  name: "SuperGreenLab Light Card",
+  description: "Box lights + schedule, mode-aware on the timer type.",
+});
 window.customCards.push({
   type: "sgl-fan-card",
   name: "SuperGreenLab Fan Card",

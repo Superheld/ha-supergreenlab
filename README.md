@@ -83,33 +83,42 @@ curves and the rest appear as settings on the controller's device page
 - **Anything else** → *Settings → System → Logs* (filter `supergreenlab`), or
   open an [issue](https://github.com/Superheld/ha-supergreenlab/issues).
 
-## Bundled Lovelace card
+## Bundled Lovelace cards
 
-The integration ships a custom **`sgl-fan-card`** and auto-loads it — no separate
-HACS plugin and no manual dashboard resource needed. It's a *mode-aware* card for
-one fan/blower: it shows the mode plus only the settings relevant to that mode
-(Manual → speed; Timer → speed range; Temperature/Humidity/VPD/CO₂ → reference
-range + speed range).
+The integration ships custom *mode-aware* cards and auto-loads them — no separate
+HACS plugin and no manual dashboard resource. Each card needs only one anchor
+entity (its **mode**); the rest is resolved automatically from the same box.
 
-Add it (**Add card → SuperGreenLab Fan Card → Manual**) and give it just the
-fan's **Mode** entity — the reference, speed and current entities and the title
-are derived automatically from it.
+### `sgl-fan-card`
 
-Minimal YAML (just the mode entity; replace with your controller's name):
+For a **fan or blower** — point it at the unit's mode select. Shows the mode plus
+only the relevant settings (Manual → speed; Timer → schedule times + speed;
+Temperature/Humidity/VPD/CO₂ → current reading + reference range + speed), and
+the current speed.
 
 ```yaml
+# Fan (in-box circulation)
 type: custom:sgl-fan-card
 mode: select.supergreencontroller_box_0_fan_mode
 ```
+```yaml
+# Blower (exhaust) — same card, blower mode entity
+type: custom:sgl-fan-card
+mode: select.supergreencontroller_box_0_blower_mode
+```
 
-You can still override any derived entity or the title explicitly:
+### `sgl-light-card`
+
+For a box's **lights** — point it at the box **Timer mode** select. Shows the
+LED channels (brightness) plus, depending on the timer type, the on/off schedule
+times (On/Off) or the season settings (Season).
 
 ```yaml
-type: custom:sgl-fan-card
-title: Fan
-mode: select.supergreencontroller_box_0_fan_mode
-speed_min: number.supergreencontroller_box_0_fan_speed_min
+type: custom:sgl-light-card
+mode: select.supergreencontroller_box_0_timer_mode
 ```
+
+Any derived entity or the title can be overridden explicitly in the YAML.
 
 ## Example dashboard
 

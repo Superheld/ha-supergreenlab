@@ -38,7 +38,7 @@ PLATFORMS: list[Platform] = [
 
 # Bundled Lovelace card, served and auto-loaded so users don't need a separate
 # HACS plugin or a manual dashboard resource.
-_CARD_URL = "/supergreenlab/sgl-fan-card.js"
+_CARD_URL = "/supergreenlab/sgl-cards.js"
 _CARD_KEY = f"{DOMAIN}_card_registered"
 
 
@@ -50,7 +50,7 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     """
     if hass.data.get(_CARD_KEY):
         return
-    path = os.path.join(os.path.dirname(__file__), "sgl-fan-card.js")
+    path = os.path.join(os.path.dirname(__file__), "sgl-cards.js")
     try:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(_CARD_URL, path, False)]
