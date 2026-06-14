@@ -91,9 +91,9 @@ one fan/blower: it shows the mode plus only the settings relevant to that mode
 (Manual → speed; Timer → speed range; Temperature/Humidity/VPD/CO₂ → reference
 range + speed range).
 
-Add it from the card picker (**Add card → SuperGreenLab Fan Card**) and pick the
-fan's **Mode** entity in the editor — that's it. The reference and speed entities
-are derived automatically from the mode entity.
+Add it (**Add card → SuperGreenLab Fan Card → Manual**) and give it just the
+fan's **Mode** entity — the reference, speed and current entities and the title
+are derived automatically from it.
 
 Minimal YAML (just the mode entity; replace with your controller's name):
 

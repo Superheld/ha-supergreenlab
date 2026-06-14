@@ -1,12 +1,12 @@
 /*
  * SuperGreenLab Fan Card — a mode-aware Lovelace card for one fan/blower.
  *
- * Bundles the mode select with its dependent settings and shows only the
- * relevant ones for the chosen mode (something native cards can't do).
+ * Shows the mode select plus only the settings relevant to the chosen mode
+ * (something native cards can't do).
  *
- * Easy config: you only provide the `mode` entity (or pick it in the editor);
- * the reference/speed entities are derived from its entity id. Explicit entity
- * ids in the config override the derived ones.
+ * Config: provide the `mode` entity; the reference/speed/current entities and a
+ * title are derived from its entity id. Explicit ids in the config override the
+ * derived ones.
  */
 
 const MODE_FIELDS = {
@@ -25,8 +25,6 @@ const FIELD_LABELS = {
   speed_max: "Speed max",
 };
 
-// Derive the sibling entity ids + a title from the mode entity id, e.g.
-// "select.<base>_intake_fan_mode" -> base "<base>_intake_fan".
 function deriveConfig(config) {
   const base = config.mode.replace(/^select\./, "").replace(/_mode$/, "");
   let title = config.title;
@@ -48,7 +46,7 @@ function deriveConfig(config) {
 
 class SglFanCard extends HTMLElement {
   setConfig(config) {
-    if (!config.mode) {
+    if (!config || !config.mode) {
       throw new Error("sgl-fan-card: 'mode' entity is required");
     }
     this._config = deriveConfig(config);
@@ -63,17 +61,6 @@ class SglFanCard extends HTMLElement {
 
   getCardSize() {
     return 3;
-  }
-
-  static getStubConfig(hass) {
-    const mode = Object.keys(hass.states).find(
-      (e) => e.startsWith("select.") && e.endsWith("_fan_mode")
-    );
-    return { mode: mode || "select.REPLACE_intake_fan_mode" };
-  }
-
-  static getConfigElement() {
-    return document.createElement("sgl-fan-card-editor");
   }
 
   _build() {
@@ -102,6 +89,7 @@ class SglFanCard extends HTMLElement {
   _update() {
     const hass = this._hass;
     const c = this._config;
+    if (!hass || !c) return;
     const modeState = hass.states[c.mode];
     if (!modeState) {
       this._body.innerHTML = `<p>Unknown entity: ${c.mode}</p>`;
@@ -164,50 +152,10 @@ class SglFanCard extends HTMLElement {
   }
 }
 
-// Minimal visual editor: pick the fan's Mode entity, the rest is derived.
-class SglFanCardEditor extends HTMLElement {
-  setConfig(config) {
-    this._config = config;
-    this._render();
-  }
-
-  set hass(hass) {
-    this._hass = hass;
-    this._render();
-  }
-
-  _render() {
-    if (!this._hass) return;
-    if (!this._picker) {
-      this.innerHTML = "";
-      const picker = document.createElement("ha-entity-picker");
-      picker.label = "Fan mode entity";
-      picker.includeDomains = ["select"];
-      picker.entityFilter = (s) => s.entity_id.endsWith("_fan_mode");
-      picker.addEventListener("value-changed", (e) => {
-        this.dispatchEvent(
-          new CustomEvent("config-changed", {
-            detail: { config: { ...this._config, mode: e.detail.value } },
-            bubbles: true,
-            composed: true,
-          })
-        );
-      });
-      this._picker = picker;
-      this.appendChild(picker);
-    }
-    this._picker.hass = this._hass;
-    this._picker.value = this._config.mode || "";
-  }
-}
-
 customElements.define("sgl-fan-card", SglFanCard);
-customElements.define("sgl-fan-card-editor", SglFanCardEditor);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "sgl-fan-card",
   name: "SuperGreenLab Fan Card",
   description: "Mode-aware control for a SuperGreenLab fan/blower.",
-  preview: false,
-  documentationURL: "https://github.com/Superheld/ha-supergreenlab",
 });
