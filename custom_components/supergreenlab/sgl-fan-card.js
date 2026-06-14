@@ -53,7 +53,6 @@ class SglFanCard extends HTMLElement {
       throw new Error("sgl-fan-card: 'mode' entity is required");
     }
     this._rawConfig = config;
-    this._config = null;
     this._key = null;
     this._inner = null;
   }
@@ -70,8 +69,9 @@ class SglFanCard extends HTMLElement {
 
   _render(helpers) {
     const hass = this._hass;
-    if (!this._config) this._config = resolveConfig(hass, this._rawConfig);
-    const c = this._config;
+    // Resolve every render: entities can appear later (e.g. after enabling a
+    // previously-disabled one), so we must not cache an incomplete result.
+    const c = resolveConfig(hass, this._rawConfig);
     const modeState = hass.states[c.mode];
     const mode = modeState ? modeState.state : undefined;
     const fields = MODE_FIELDS[mode] || ["speed_min", "speed_max"];
