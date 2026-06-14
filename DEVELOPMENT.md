@@ -248,11 +248,12 @@ or manual dashboard resource is needed. Notes:
   shows only the timer mode + the inputs that mode needs (On/Off → grow-phase
   select + on/off times; Season → season settings). Per-channel brightness and
   "light on" are deliberately *not* in it.
-- `sgl-box-card` is a per-box **overview/setup** card: it groups the box's
-  entities into `{type: "section"}` rows (Status / Lights / Climate sources /
-  Ventilation / Schedule). It anchors on any box entity (`entity:` or `mode:`).
-  Spectrum selects carry no box token (named `Light {led} spectrum`), so it
-  correlates them to the box via the LED index in the box's `light` entity ids.
+- `sgl-box-card` is the per-box **hardware setup** card (lean on purpose): two
+  `{type: "section"}` groups — *Climate sensors* (the `*_SOURCE` selects) and
+  *Light spectrum* (`LED_x_TYPE`). No live values / fan modes / schedule. Anchors
+  on any box entity (`entity:`, or `mode:` as alias). Spectrum selects carry no
+  box token (named `Light {led} spectrum`), so it correlates them to the box via
+  the LED index in the box's `light` entity ids.
 - **Entity resolution** is the tricky part. From the anchor `mode` entity the
   card finds siblings by **shared `device_id`** (via `hass.entities`), the fan
   *kind* (`fan`/`blower`, plus legacy `intake`/`exhaust`), a **soft** box-index

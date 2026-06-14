@@ -235,11 +235,11 @@ class SglLightCard extends HTMLElement {
 }
 
 // ---------------------------------------------------------------------------
-// Box card — an overview + setup helper for one grow box. Enabling a box adds
-// a flood of new entities; this groups the box's entities into sections
-// (Status / Lights / Climate sources / Ventilation / Schedule) so you can see
-// what hardware the box has and do the key one-time setups without hunting
-// through the device page. Anchor: any entity of the box (e.g. its timer mode).
+// Box card — the per-box HARDWARE setup: which sensor source feeds each metric
+// and what spectrum each LED channel is. Just the one-time wiring choices, not
+// live values / fan modes / schedule (those have their own cards). Anchor:
+// `entity:` = any entity of the box (e.g. its timer mode select). `mode:` is
+// accepted as an alias for consistency with the other cards.
 // ---------------------------------------------------------------------------
 
 function resolveBoxConfig(hass, config) {
@@ -290,24 +290,12 @@ function resolveBoxConfig(hass, config) {
   }
 
   return {
-    title: boxNum !== null ? `Box ${boxNum}` : "Box",
-    temp: find("sensor", ["_temperature"]),
-    humi: find("sensor", ["_humidity"]),
-    vpd: find("sensor", ["_vpd"]),
-    co2: find("sensor", ["_co2"]),
-    light_on: find("binary_sensor", ["light_on"]),
-    fan_current: find("sensor", ["_fan"]),
-    blower_current: find("sensor", ["_blower"]),
-    timer_mode: find("select", ["_timer_mode"]),
-    light_phase: find("select", ["_light_phase"]),
-    fan_mode: find("select", ["_fan_mode"]),
-    blower_mode: find("select", ["_blower_mode"]),
+    title: boxNum !== null ? `Box ${boxNum} setup` : "Box setup",
     temp_source: find("select", ["_temperature_source"]),
     humi_source: find("select", ["_humidity_source"]),
     vpd_source: find("select", ["_vpd_source"]),
     co2_source: find("select", ["_co2_source"]),
     weight_source: find("select", ["_weight_source"]),
-    lights,
     spectrum,
     ...config,
   };
@@ -330,7 +318,7 @@ class SglBoxCard extends HTMLElement {
   }
 
   getCardSize() {
-    return this._inner?.getCardSize?.() ?? 6;
+    return this._inner?.getCardSize?.() ?? 3;
   }
 
   _render(helpers) {
@@ -345,15 +333,10 @@ class SglBoxCard extends HTMLElement {
       entities.push({ type: "section", label });
       for (const id of present) entities.push(id);
     };
-    section("Status", [
-      c.temp, c.humi, c.vpd, c.co2, c.light_on, c.fan_current, c.blower_current,
-    ]);
-    section("Lights", [...c.lights, ...c.spectrum]);
-    section("Climate sources", [
+    section("Climate sensors", [
       c.temp_source, c.humi_source, c.vpd_source, c.co2_source, c.weight_source,
     ]);
-    section("Ventilation", [c.fan_mode, c.blower_mode]);
-    section("Schedule", [c.timer_mode, c.light_phase]);
+    section("Light spectrum", c.spectrum);
 
     const key = entities.map((e) => (typeof e === "string" ? e : e.label)).join(",");
     if (key !== this._key) {
@@ -390,5 +373,5 @@ window.customCards.push({
 window.customCards.push({
   type: "sgl-box-card",
   name: "SuperGreenLab Box Card",
-  description: "Overview + setup for one grow box, grouped into sections.",
+  description: "Per-box hardware setup: sensor sources + light spectrum.",
 });

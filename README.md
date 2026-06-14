@@ -118,8 +118,8 @@ box **Timer mode** select. Shows the mode (Manual / On/Off / Season) and *only*
 the inputs that mode needs: in **On/Off** a **Light phase** picker (*Vegetative /
 Bloom / Auto*, the app's grow-phase presets — choosing one fills sensible on/off
 times; editing a time by hand switches it to *Custom*) plus the on/off times; in
-**Season** the season settings. Per-channel brightness isn't here — it lives on
-the device page / in the box card.
+**Season** the season settings. Per-channel brightness isn't here — those are
+the box's `light` entities (use them on the device page or a plain entities card).
 
 ```yaml
 type: custom:sgl-light-card
@@ -128,12 +128,11 @@ mode: select.supergreencontroller_box_0_timer_mode
 
 ### `sgl-box-card`
 
-A **per-box overview & setup** card. Enabling a box adds a lot of entities;
-this groups one box's entities into sections — *Status* (live climate, light on,
-fan/blower), *Lights* (channels + spectrum), *Climate sources* (which sensor
-feeds each metric), *Ventilation* (fan/blower mode) and *Schedule* — so you can
-see what hardware the box has and do the key setups in one place. Point it at any
-entity of the box (e.g. its timer mode select).
+A box's **hardware setup** — the one-time wiring choices: which sensor source
+feeds each metric (*Climate sensors*) and what spectrum each LED channel is
+(*Light spectrum*). It deliberately leaves out live values, fan modes and the
+schedule — those have their own cards. Unlike the other cards it's anchored with
+`entity:` (any entity of the box, e.g. its timer mode select), not `mode:`.
 
 ```yaml
 type: custom:sgl-box-card
