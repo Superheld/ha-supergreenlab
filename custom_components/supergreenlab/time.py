@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .catalog import TIMES, EntityDef, expand
 from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator
 from .entity import SGLCatalogEntity
+from .tz import device_to_local_hm, local_to_device_hm
 
 
 async def async_setup_entry(
@@ -57,12 +58,15 @@ class SuperGreenTime(SGLCatalogEntity, TimeEntity):
         )
         if hour is None or minute is None:
             return None
+        # The firmware stores the schedule in UTC; show it in HA's local time.
+        local_hour, local_minute = device_to_local_hm(hour, minute)
         try:
-            return time(hour=hour, minute=minute)
+            return time(hour=local_hour, minute=local_minute)
         except ValueError:
             return None
 
     async def async_set_value(self, value: time) -> None:
-        """Write the hour and minute back to the controller."""
-        await self.coordinator.async_set_int(self._key, value.hour)
-        await self.coordinator.async_set_int(self._minute_key, value.minute)
+        """Write the hour and minute back to the controller (local -> UTC)."""
+        hour, minute = local_to_device_hm(value.hour, value.minute)
+        await self.coordinator.async_set_int(self._key, hour)
+        await self.coordinator.async_set_int(self._minute_key, minute)

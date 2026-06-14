@@ -326,6 +326,17 @@ plain ESP32 (no native USB).
   `dependencies` (see cards section).
 - **The firmware code can be newer than its documented esp-idf pin** — don't
   trust the README's pinned commit for building.
+- **Sensors aren't on the port matching the box number.** A box reading its
+  temperature from SHT21 port #2 is normal. So the fan/blower **mode** select
+  must point its `*_REF_SOURCE` at the sensor the box already uses
+  (`BOX_x_TEMP_SOURCE` etc., translated by label into the `fan_ref`/`blower_ref`
+  encoding), **not** a hardcoded `offset + box`. The old hardcoding silently
+  pointed the unit at an absent sensor → reference read ~0 → output clamped to
+  `*_MIN` (e.g. a blower stuck at 10%). See `_resolve_source` in `select.py`.
+- **The schedule runs in UTC** (the firmware sets no timezone). The `time`
+  entities and the light-phase select convert device-UTC ↔ HA-local (`tz.py`);
+  the conversion uses today's date, so it's DST-correct now but a fixed stored
+  hour drifts 1h across a DST change until re-written. See FIRMWARE_REVIEW.md #6.
 - **Boxes are fixed hardware slots, baked in at firmware build time.** The box
   count is decided by the code generator, not at runtime: `_box_conf` in
   `config_gen/config/SuperGreenOS/Controllers/<variant>/box.cue` is a fixed list
