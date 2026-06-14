@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import async_get_integration
 
 from .api import SuperGreenAPI, SuperGreenApiError
 from .config_flow import CONF_AUTH
@@ -54,7 +55,10 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         await hass.http.async_register_static_paths(
             [StaticPathConfig(_CARD_URL, path, False)]
         )
-        add_extra_js_url(hass, _CARD_URL)
+        # Append the integration version so browsers reload the card on update
+        # instead of serving a stale cached copy.
+        integration = await async_get_integration(hass, DOMAIN)
+        add_extra_js_url(hass, f"{_CARD_URL}?v={integration.version}")
         hass.data[_CARD_KEY] = True
     except Exception:  # noqa: BLE001 - bundled card is a non-essential extra
         _LOGGER.debug("Could not register bundled Lovelace card", exc_info=True)
