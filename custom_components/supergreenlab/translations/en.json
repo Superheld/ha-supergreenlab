@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "SuperGreenLab Controller",
+        "description": "Enter the IP address or hostname of your controller. Credentials are only needed if you set an HTTP auth token on the device.",
+        "data": {
+          "host": "Host or IP address",
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the controller. Check the IP address and that it is on the network."
+    },
+    "abort": {
+      "already_configured": "This controller is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "SuperGreenLab options",
+        "description": "How often to poll live readings (temperature, humidity, fan speeds). Config values are polled less frequently.",
+        "data": {
+          "fast_interval": "Live polling interval (seconds)"
+        }
+      }
+    }
+  }
+}
