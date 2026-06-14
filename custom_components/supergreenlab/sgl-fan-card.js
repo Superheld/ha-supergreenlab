@@ -25,22 +25,31 @@ const FIELD_LABELS = {
   speed_max: "Speed max",
 };
 
-function deriveConfig(config) {
-  const base = config.mode.replace(/^select\./, "").replace(/_mode$/, "");
-  let title = config.title;
-  if (!title) {
-    if (base.endsWith("intake_fan")) title = "Intake fan";
-    else if (base.endsWith("exhaust_fan")) title = "Exhaust fan";
-    else title = "Fan";
+// Resolve sibling entities from the mode entity. Matches by entity-id prefix +
+// role suffix, accepting both current and legacy names (entity ids don't change
+// when an entity is renamed, so upgraded installs keep old-style ids).
+function resolveConfig(hass, config) {
+  const m = config.mode.match(/^select\.(.+)_(intake|exhaust)_fan_mode$/);
+  if (!m) {
+    return { title: config.title || "Fan", ...config };
   }
+  const [, prefix, kind] = m;
+  const start = `${prefix}_${kind}`; // e.g. "growbox_box_0_intake"
+  const find = (domain, suffixes) => {
+    const head = `${domain}.${start}`;
+    for (const id of Object.keys(hass.states)) {
+      if (id.startsWith(head) && suffixes.some((s) => id.endsWith(s))) return id;
+    }
+    return undefined;
+  };
   return {
-    reference_from: `number.${base}_reference_from`,
-    reference_to: `number.${base}_reference_to`,
-    speed_min: `number.${base}_speed_min`,
-    speed_max: `number.${base}_speed_max`,
-    current: `sensor.${base}`,
-    ...config,
-    title,
+    title: kind === "intake" ? "Intake fan" : "Exhaust fan",
+    reference_from: find("number", ["reference_from", "ref_min"]),
+    reference_to: find("number", ["reference_to", "ref_max"]),
+    speed_min: find("number", ["speed_min", "fan_min"]),
+    speed_max: find("number", ["speed_max", "fan_max"]),
+    current: find("sensor", ["_fan"]),
+    ...config, // explicit ids/title win
   };
 }
 
@@ -49,12 +58,14 @@ class SglFanCard extends HTMLElement {
     if (!config || !config.mode) {
       throw new Error("sgl-fan-card: 'mode' entity is required");
     }
-    this._config = deriveConfig(config);
+    this._rawConfig = config;
+    this._config = null;
     this._root = null;
   }
 
   set hass(hass) {
     this._hass = hass;
+    if (!this._config) this._config = resolveConfig(hass, this._rawConfig);
     if (!this._root) this._build();
     this._update();
   }
