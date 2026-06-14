@@ -55,49 +55,39 @@ Diagnostics: `STATE`, `N_RESTARTS`, sensor `*_PRESENT` flags.
 
 ## Installation
 
-The goal is to get the `supergreenlab` folder into your HA config directory so
-the final path is:
+### HACS (recommended)
 
-```
-config/custom_components/supergreenlab/manifest.json
-```
+Easiest to install *and* to keep updated — new releases show up in HACS with a
+one-click update.
 
-Pick whichever transfer method fits your setup, then restart Home Assistant.
+> Requires [HACS](https://hacs.xyz). If you don't have it yet, install HACS
+> first by following its own documentation.
 
-### HA OS / Supervised — via Samba (easiest)
+Then add this integration:
 
-1. Install the **Samba share** app: *Settings → Apps* (formerly "Add-ons") →
-   App Store → **Samba share** → install, set a username/password, start.
-2. On your computer, open the network share `\\homeassistant\config`
-   (Windows) or `smb://homeassistant.local` → `config` (macOS Finder →
-   *Go → Connect to Server*).
-3. Unpack the release archive locally — you get `custom_components/supergreenlab/`.
-4. In the `config` share, create a `custom_components` folder if it doesn't
-   exist, and copy the **`supergreenlab`** folder into it.
-5. Restart Home Assistant: *Settings → System → ⟳ (top right) → Restart*.
+1. Open **HACS** → top-right **⋮ → Custom repositories**.
+2. Repository: `https://github.com/Superheld/ha-supergreenlab` — Type:
+   **Integration** → **Add**.
+3. Search for **SuperGreenLab Controller** in HACS → open → **Download**.
+4. **Restart Home Assistant** when prompted.
 
-### HA OS / Supervised — via SSH terminal
+### Manual / git (no HACS)
 
-Install the **Advanced SSH & Web Terminal** app. Put the archive in the
-`share` share, then:
+Get the `supergreenlab` folder into your config directory so the final path is
+`config/custom_components/supergreenlab/manifest.json`, then restart HA.
+
+On HA OS / Supervised, the simplest no-copy way is the **Terminal & SSH** app:
 
 ```bash
-cd /config && mkdir -p custom_components
-tar xzf /share/supergreenlab-ha-*.tar.gz -C /config
-ls custom_components/supergreenlab/manifest.json   # sanity check
+cd /tmp && rm -rf sgl && git clone https://github.com/Superheld/ha-supergreenlab.git sgl
+mkdir -p /config/custom_components
+cp -r /tmp/sgl/custom_components/supergreenlab /config/custom_components/
+ls /config/custom_components/supergreenlab/manifest.json   # sanity check
 ```
 
-Restart Home Assistant afterwards.
-
-### HACS (custom repository)
-
-Add this repository as a **custom repository** in HACS (category:
-*Integration*), install it, then restart Home Assistant.
-
-### HA Container / Core (manual)
-
-Copy `custom_components/supergreenlab` into the `config/custom_components/`
-directory of your installation and restart Home Assistant.
+To update later, re-run the same block and restart. On HA Container / Core,
+copy the `custom_components/supergreenlab` folder into your `config/custom_components/`
+directory instead.
 
 ## Setup
 
