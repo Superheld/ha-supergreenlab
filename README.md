@@ -66,6 +66,77 @@ curves and the rest appear as settings on the controller's device page
 > 💡 Tip: add a box's entities to a Home Assistant **Area** to group them by
 > physical space.
 
+## What the entities do
+
+Per box (the most-used ones; many advanced/diagnostic entities exist too but are
+disabled by default — enable them from the device page if you need them):
+
+**Lights**
+- *Light 0/1/2 …* — brightness (0–100 %) of each LED channel assigned to the box.
+- *Light on* — read-only: whether the box light is currently on.
+- *Light output* — read-only: the % the schedule/season currently commands.
+
+**Light schedule**
+- *Timer mode* — the main light-driving switch: **Manual** (just the brightness,
+  no schedule), **On/Off schedule** (on/off at fixed times), **Season** (day
+  length follows a simulated, slowly-shifting season). **Season is a firmware
+  feature the official app doesn't offer** — here you can pick it, set the season
+  parameters below, and press *Start season* to begin.
+- *Light phase* — in On/Off mode, a *Vegetative / Bloom / Auto* preset that fills
+  sensible on/off times (it's a convenience; the device only stores the times).
+- *Light on time / off time* — the actual schedule times (shown in your local
+  time; see the sync note below).
+- *Season start month / day*, *Season duration*, *Season sim days*, *Start season*
+  (button) — the Season-mode parameters and the “start it now” trigger.
+
+**Climate (read-only)**
+- *Temperature, Humidity, VPD, CO₂* (and *Weight* if enabled) — the box's live
+  readings, taken from the sensor each *…source* points at.
+
+**Climate sources**
+- *Temperature/Humidity/VPD/CO₂ source* — which physical sensor (at which port)
+  feeds that reading for this box.
+
+**Ventilation**
+- *Fan mode / Blower mode* — what the unit follows: **Manual**, **Timer**
+  (coupled to the light), or **Temperature / Humidity / VPD / CO₂** (auto-curve).
+- *Fan/Blower speed min / max* — the duty range (% when the reference is at its
+  low / high end).
+- *Fan/Blower reference from / to* — the reference range the curve ramps over.
+- *Fan / Blower* — read-only: the unit's current duty %.
+
+**Other**
+- *Sunglasses mode* (switch) — dims the box lights ~20 min for working inside;
+  self-clears.
+
+Device-wide diagnostics: *State*, *Restarts*, and *…present* flags (which i2c
+sensors the controller detects).
+
+## App and Home Assistant don't sync live
+
+Both the official app and this integration talk to the **same controller**
+independently — there is no live link between them. What that means in practice:
+
+- **No status sync.** The app's grow-phase label (*Vegetative/Bloom/Auto*) lives
+  only inside the app (and its cloud); it isn't stored on the controller, so Home
+  Assistant can't read or set it. Change the schedule from HA and the app keeps
+  showing its last-set phase. (HA derives its own *Light phase* from the times.)
+- **Changes propagate by polling, not live push — that works, it's just not
+  instant.** A change made in HA reaches the controller right away; a change made
+  elsewhere shows up in HA on its next config poll (up to a few minutes). Nothing
+  is broken here, it just isn't real-time.
+- **The app only *sets*, it doesn't show what's set.** The app's schedule screen
+  lets you enter times but doesn't display the controller's currently-active
+  schedule — so you can't read back the real values there. Home Assistant does
+  show the live device values, so use HA to see what's actually set.
+- **The hour can read differently in each.** The controller's firmware runs the
+  schedule in **UTC** (it sets no timezone). HA converts that to your local time
+  so the times match your wall clock; the app shows the raw number. So the same
+  schedule can appear as e.g. *21:00* in the app and *23:00* in HA — HA's is the
+  real switching time. The clean fix belongs in the firmware (see
+  [DEVELOPMENT.md](DEVELOPMENT.md)); until then, set the schedule from **one**
+  place to avoid confusion.
+
 ## Tips
 
 - **Light brightness** sets each channel's intensity; the light's actual output
