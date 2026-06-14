@@ -146,7 +146,7 @@ class SglFanCard extends HTMLElement {
 const LIGHT_MODE_FIELDS = {
   Manual: [],
   "On/Off schedule": ["on_time", "off_time"],
-  Season: ["start_month", "start_day", "duration"],
+  Season: ["start_month", "start_day", "duration", "sim_duration", "start_season"],
 };
 
 function resolveLightConfig(hass, config) {
@@ -182,6 +182,8 @@ function resolveLightConfig(hass, config) {
     start_month: find("number", ["start_month"]),
     start_day: find("number", ["start_day"]),
     duration: find("number", ["season_duration", "duration"]),
+    sim_duration: find("number", ["sim_days"]),
+    start_season: find("button", ["start_season"]),
     ...config,
   };
 }

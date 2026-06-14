@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import time
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,5 +29,6 @@ class SuperGreenButton(SGLCatalogEntity, ButtonEntity):
     """A momentary action that writes 1 to its key."""
 
     async def async_press(self) -> None:
-        """Trigger the action."""
-        await self.coordinator.api.set_int(self._key, 1)
+        """Trigger the action: write the current unix time, or 1."""
+        value = int(time.time()) if self._def.press_now else 1
+        await self.coordinator.api.set_int(self._key, value)

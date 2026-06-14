@@ -47,6 +47,8 @@ class EntityDef:
     scope: str
     # second key, used by the time platform (hour = key, minute = key2)
     key2: str | None = None
+    # button: write the current unix time instead of 1 (e.g. "start season now")
+    press_now: bool = False
     # Polling speed: live readings poll fast, config polls slow.
     fast: bool = False
     category: str | None = None  # None | "config" | "diagnostic"
@@ -194,7 +196,7 @@ NUMBERS: tuple[EntityDef, ...] = (
               scope="box", max=1000, enabled_default=False, **_CFG),
     # season simulation length
     EntityDef(platform="number", key="BOX_{box}_SIM_DURATION_DAYS", name="Box {box} Season sim days",
-              scope="box", max=365, enabled_default=False, **_CFG),
+              scope="box", max=365, **_CFG),
     # load-cell tare offset (raw)
     EntityDef(platform="number", key="HX711_{n}_WEIGHT_OFFSET", name="HX711 #{n} tare offset",
               scope="hx", min=-1000000, max=1000000, enabled_default=False, **_CFG),
@@ -261,6 +263,8 @@ SWITCHES: tuple[EntityDef, ...] = (
 BUTTONS: tuple[EntityDef, ...] = (
     EntityDef(platform="button", key="REBOOT", name="Restart controller", scope="device",
               category="config", icon="mdi:restart", enabled_default=False),
+    EntityDef(platform="button", key="BOX_{box}_STARTED_AT", name="Box {box} Start season",
+              scope="box", category="config", icon="mdi:calendar-start", press_now=True),
 )
 
 # --- times (writable schedule, hour+minute merged) ------------------------
