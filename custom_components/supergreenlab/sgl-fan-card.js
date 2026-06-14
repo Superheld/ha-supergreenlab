@@ -31,18 +31,20 @@ function resolveConfig(hass, config) {
   const boxToken = (modeId.match(/box_\d+/) || [])[0];
   const deviceId = hass.entities?.[modeId]?.device_id;
 
-  const find = (domain, suffixes) => {
+  const scan = (domain, suffixes, useBox) => {
     for (const id of Object.keys(hass.states)) {
       if (!id.startsWith(`${domain}.`)) continue;
-      if (deviceId) {
-        if (hass.entities?.[id]?.device_id !== deviceId) continue;
-      }
+      if (deviceId && hass.entities?.[id]?.device_id !== deviceId) continue;
       if (!id.includes(kind)) continue;
-      if (boxToken && !id.includes(boxToken)) continue;
+      if (useBox && boxToken && !id.includes(boxToken)) continue;
       if (suffixes.some((s) => id.endsWith(s))) return id;
     }
     return undefined;
   };
+  // Prefer the matching box (multi-box safe); fall back to ignoring the box
+  // token for installs whose entity ids are inconsistent (e.g. renamed).
+  const find = (domain, suffixes) =>
+    scan(domain, suffixes, true) ?? scan(domain, suffixes, false);
 
   return {
     title: kind === "exhaust" ? "Exhaust fan" : "Intake fan",
