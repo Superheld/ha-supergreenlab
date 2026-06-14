@@ -3,7 +3,6 @@
   "name": "SuperGreenLab Controller",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/Superheld/ha-supergreenlab",
   "integration_type": "device",
   "iot_class": "local_polling",

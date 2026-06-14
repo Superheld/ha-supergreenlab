@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 
 from homeassistant.components.frontend import add_extra_js_url
@@ -21,6 +22,8 @@ from .coordinator import (
     build_coordinators,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -39,15 +42,22 @@ _CARD_KEY = f"{DOMAIN}_card_registered"
 
 
 async def _async_register_frontend(hass: HomeAssistant) -> None:
-    """Serve the bundled card and load it once for the frontend."""
+    """Serve the bundled card and load it once for the frontend.
+
+    Best-effort: frontend/http are always present in a real HA but not in some
+    test environments, so a failure here must never break integration setup.
+    """
     if hass.data.get(_CARD_KEY):
         return
-    hass.data[_CARD_KEY] = True
     path = os.path.join(os.path.dirname(__file__), "sgl-fan-card.js")
-    await hass.http.async_register_static_paths(
-        [StaticPathConfig(_CARD_URL, path, False)]
-    )
-    add_extra_js_url(hass, _CARD_URL)
+    try:
+        await hass.http.async_register_static_paths(
+            [StaticPathConfig(_CARD_URL, path, False)]
+        )
+        add_extra_js_url(hass, _CARD_URL)
+        hass.data[_CARD_KEY] = True
+    except Exception:  # noqa: BLE001 - bundled card is a non-essential extra
+        _LOGGER.debug("Could not register bundled Lovelace card", exc_info=True)
 
 
 async def async_setup_entry(
