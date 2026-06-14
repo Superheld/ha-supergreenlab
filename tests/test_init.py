@@ -23,11 +23,13 @@ async def test_vpd_scaled_to_kpa(hass: HomeAssistant, setup_entry):
     assert hass.states.get(eid).state == "1.45"
 
 
-async def test_box_subdevice_created(hass: HomeAssistant, setup_entry):
+async def test_single_controller_device(hass: HomeAssistant, setup_entry):
     reg = dr.async_get(hass)
-    box = reg.async_get_device(identifiers={("supergreenlab", "abc123_box0")})
-    assert box is not None
-    assert box.via_device_id is not None
+    # The controller is the only device; boxes are logical slots, not devices.
+    controller = reg.async_get_device(identifiers={("supergreenlab", "abc123")})
+    assert controller is not None
+    devices = dr.async_entries_for_config_entry(reg, setup_entry.entry_id)
+    assert len(devices) == 1
 
 
 async def test_unload(hass: HomeAssistant, setup_entry):

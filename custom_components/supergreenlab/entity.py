@@ -1,10 +1,10 @@
 """Base entities for the SuperGreenLab Controller integration.
 
-Each enabled grow box is modelled as its own HA device, linked to the
-controller via ``via_device``. Entities that belong to a box (sensors, lights,
-schedule, sources …) attach to that box device; global entities (state,
-restarts, reboot, valve, motors) attach to the controller device. This groups
-everything for a box on one page — the box's physical composition in one place.
+There is a single HA device: the controller (the thing we address over the
+network). A "box" is not a device — it's a logical slot (0..2) on the
+controller into which hardware is wired. Box membership is therefore just a
+naming convention on the entities ("Box 0 …"); users can group boxes spatially
+with HA Areas.
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ _CATEGORY = {
 
 
 def controller_device_info(device: SGLDevice, host: str) -> DeviceInfo:
-    """Device info for the controller itself (the parent device)."""
+    """Device info for the controller (the only device)."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.client_id)},
         name=device.name,
@@ -34,38 +34,16 @@ def controller_device_info(device: SGLDevice, host: str) -> DeviceInfo:
     )
 
 
-def box_device_info(device: SGLDevice, box: int) -> DeviceInfo:
-    """Device info for a grow box, linked under the controller."""
-    return DeviceInfo(
-        identifiers={(DOMAIN, f"{device.client_id}_box{box}")},
-        name=f"{device.name} Box {box}",
-        manufacturer=MANUFACTURER,
-        model=f"{MODEL} grow box",
-        via_device=(DOMAIN, device.client_id),
-    )
-
-
-def device_info_for(
-    device: SGLDevice, host: str, box: int | None
-) -> DeviceInfo:
-    """Pick the box device when a box is known, else the controller."""
-    if box is not None:
-        return box_device_info(device, box)
-    return controller_device_info(device, host)
-
-
 class SuperGreenEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
-    """Base for hand-written entities (light), optionally on a box device."""
+    """Base for hand-written entities (light)."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: SuperGreenDataUpdateCoordinator, box: int | None = None
-    ) -> None:
+    def __init__(self, coordinator: SuperGreenDataUpdateCoordinator) -> None:
         """Initialise shared device info."""
         super().__init__(coordinator)
-        self._attr_device_info = device_info_for(
-            coordinator.device, coordinator.api.host, box
+        self._attr_device_info = controller_device_info(
+            coordinator.device, coordinator.api.host
         )
 
     def _unique_id(self, suffix: str) -> str:
@@ -89,15 +67,9 @@ class SGLCatalogEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
         self._def = definition
         self._key = definition.key.format(**placeholders)
         self._structural = is_structural(definition.key)
-        box = _box_of(device, placeholders)
-        name = definition.name.format(**placeholders)
-        # The box sub-device already carries "Box N" in its name; drop the
-        # redundant prefix so we don't get "Box 0 Box 0 Temperature".
-        if box is not None and name.startswith(f"Box {box} "):
-            name = name[len(f"Box {box} ") :]
-        self._attr_name = name
+        self._attr_name = definition.name.format(**placeholders)
         self._attr_unique_id = f"{device.client_id}_{self._key}"
-        self._attr_device_info = device_info_for(device, coordinator.api.host, box)
+        self._attr_device_info = controller_device_info(device, coordinator.api.host)
         self._attr_entity_category = _CATEGORY.get(definition.category)
         self._attr_entity_registry_enabled_default = definition.enabled_default
         if definition.icon:
@@ -115,12 +87,3 @@ class SGLCatalogEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
             self.hass.config_entries.async_schedule_reload(
                 self.coordinator.config_entry.entry_id
             )
-
-
-def _box_of(device: SGLDevice, placeholders: dict[str, int]) -> int | None:
-    """Resolve the owning box for an entity instance, if any."""
-    if "box" in placeholders:
-        return placeholders["box"]
-    if "led" in placeholders:
-        return device.led_to_box.get(placeholders["led"])
-    return None

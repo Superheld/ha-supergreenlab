@@ -16,10 +16,10 @@ fan speeds, …) every 30 s by default, and **config** values every 180 s
 (they also update instantly when you change them from HA). The live interval is
 adjustable via the integration's options.
 
-**Each enabled grow box becomes its own HA device** linked under the controller,
-so everything for a box — its sensors, lights, spectrum, sources and schedule —
-is grouped on one page. Global items (state, reboot, valve, motors) stay on the
-controller device.
+There is a single HA **device: the controller**. A **box** is not a device — it
+is a logical slot (0..2) on the controller into which you wire hardware
+(lamps, fans, sensors). Box membership shows as a name prefix ("Box 0 …"); use
+HA **Areas** to group a box's entities by physical space if you like.
 
 ### Controls & sensors (dashboard)
 
