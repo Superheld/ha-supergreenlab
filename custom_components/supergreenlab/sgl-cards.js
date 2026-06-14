@@ -4,7 +4,7 @@
  * Renders a native Home Assistant `entities` card and decides which rows to
  * show based on the selected mode:
  *   Manual      -> speed
- *   Timer       -> schedule on/off times + speed range
+ *   Timer       -> coupled to the light schedule; just the speed range
  *   Temperature -> current temperature + reference range + speed range
  *   Humidity / VPD / CO2 -> like Temperature with the matching metric
  *
@@ -14,7 +14,10 @@
 
 const MODE_FIELDS = {
   Manual: ["speed_min"],
-  Timer: ["on_time", "off_time", "speed_min", "speed_max"],
+  // Timer = coupled to the light schedule (follows the box timer output). The
+  // on/off times belong to the light, not the fan, so we don't show them here —
+  // only the speed range (fan speed when the light is off / on).
+  Timer: ["speed_min", "speed_max"],
   Temperature: ["reference_from", "reference_to", "speed_min", "speed_max"],
   Humidity: ["reference_from", "reference_to", "speed_min", "speed_max"],
   VPD: ["reference_from", "reference_to", "speed_min", "speed_max"],
@@ -67,9 +70,7 @@ export function resolveConfig(hass, config) {
     speed_min: find("number", ["speed_min", "fan_min", "blower_min"]),
     speed_max: find("number", ["speed_max", "fan_max", "blower_max"]),
     current: find("sensor", ["_fan", "_blower"]),
-    // box-level entities (not fan/blower specific)
-    on_time: find("time", ["on_time"], false),
-    off_time: find("time", ["off_time"], false),
+    // box-level live readings (not fan/blower specific), shown read-only per mode
     ref_temp: find("sensor", ["_temperature"], false),
     ref_humi: find("sensor", ["_humidity"], false),
     ref_vpd: find("sensor", ["_vpd"], false),

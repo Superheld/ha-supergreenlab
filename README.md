@@ -99,9 +99,9 @@ entity (its **mode**); the rest is resolved automatically from the same box.
 ### `sgl-fan-card`
 
 For a **fan or blower** — point it at the unit's mode select. Shows the mode plus
-only the relevant settings (Manual → speed; Timer → schedule times + speed;
-Temperature/Humidity/VPD/CO₂ → current reading + reference range + speed), and
-the current speed.
+only the relevant settings (Manual → speed; Timer → just the speed range, since
+the unit follows the light schedule automatically; Temperature/Humidity/VPD/CO₂ →
+current reading + reference range + speed), and the current speed.
 
 ```yaml
 # Fan (in-box circulation)
