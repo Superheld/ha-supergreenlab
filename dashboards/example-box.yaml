@@ -1,0 +1,84 @@
+# Example Lovelace dashboard for one SuperGreenLab box, built from native cards.
+#
+# Entity IDs below assume a controller named "Dings" and box 0
+# (e.g. sensor.dings_box_0_temperature). Replace the "dings_box_0" part to match
+# your device name / box. Paste this as a new view (Dashboard -> Edit -> raw
+# config, or add a manual card) and adjust.
+#
+# The point: each "dependent group" (a fan, the schedule) is bundled into one
+# Entities card so mode + its settings sit together.
+
+title: Box 0
+path: box-0
+cards:
+  # --- Climate ---------------------------------------------------------------
+  - type: glance
+    title: Climate
+    columns: 2
+    entities:
+      - entity: sensor.dings_box_0_temperature
+        name: Temp
+      - entity: sensor.dings_box_0_humidity
+        name: Humidity
+      - entity: sensor.dings_box_0_vpd
+        name: VPD
+      - entity: sensor.dings_box_0_co2
+        name: CO2
+
+  # --- Lights ----------------------------------------------------------------
+  - type: entities
+    title: Lights
+    entities:
+      - entity: binary_sensor.dings_box_0_light_on
+        name: Scheduled on
+      - entity: light.dings_box_0_light_0
+      - entity: light.dings_box_0_light_1
+      - entity: light.dings_box_0_light_2
+      - type: section
+        label: Schedule
+      - entity: time.dings_box_0_light_on_time
+        name: On
+      - entity: time.dings_box_0_light_off_time
+        name: Off
+
+  # --- Intake fan (mode + its settings, bundled) -----------------------------
+  - type: entities
+    title: Intake fan
+    entities:
+      - entity: sensor.dings_box_0_intake_fan
+        name: Current speed
+      - entity: select.dings_box_0_intake_fan_mode
+        name: Mode
+      - type: section
+        label: Reference range (drives the ramp)
+      - entity: number.dings_box_0_intake_fan_reference_from
+        name: From
+      - entity: number.dings_box_0_intake_fan_reference_to
+        name: To
+      - type: section
+        label: Speed range
+      - entity: number.dings_box_0_intake_fan_speed_min
+        name: Min
+      - entity: number.dings_box_0_intake_fan_speed_max
+        name: Max
+
+  # --- Exhaust fan -----------------------------------------------------------
+  - type: entities
+    title: Exhaust fan
+    entities:
+      - entity: sensor.dings_box_0_exhaust_fan
+        name: Current speed
+      - entity: select.dings_box_0_exhaust_fan_mode
+        name: Mode
+      - type: section
+        label: Reference range (drives the ramp)
+      - entity: number.dings_box_0_exhaust_fan_reference_from
+        name: From
+      - entity: number.dings_box_0_exhaust_fan_reference_to
+        name: To
+      - type: section
+        label: Speed range
+      - entity: number.dings_box_0_exhaust_fan_speed_min
+        name: Min
+      - entity: number.dings_box_0_exhaust_fan_speed_max
+        name: Max

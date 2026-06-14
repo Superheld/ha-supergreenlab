@@ -83,6 +83,14 @@ curves and the rest appear as settings on the controller's device page
 - **Anything else** → *Settings → System → Logs* (filter `supergreenlab`), or
   open an [issue](https://github.com/Superheld/ha-supergreenlab/issues).
 
+## Example dashboard
+
+[`dashboards/example-box.yaml`](dashboards/example-box.yaml) is a ready-to-paste
+Lovelace view for one box, built from native cards. It bundles each dependent
+group into one card — e.g. a fan's **mode + reference range + speed range**
+together — so you don't have to assemble the entities by hand. Adjust the entity
+IDs to your device name/box.
+
 ---
 
 Building on or contributing to this integration? See
