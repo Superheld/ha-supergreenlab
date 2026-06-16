@@ -59,6 +59,10 @@ Dashboards* if you don't want it.)
 
 ## Setup
 
+Controllers on the default mDNS name (`supergreencontroller`) are **auto-discovered**:
+look for a *SuperGreenLab Controller discovered* card under
+**Settings → Devices & Services** and just confirm it. Otherwise add it manually:
+
 1. **Settings → Devices & Services → Add Integration → SuperGreenLab Controller**.
 2. Enter the controller's IP address (e.g. `192.168.1.50`).
 3. Leave username / password blank — they're only needed if you set an auth

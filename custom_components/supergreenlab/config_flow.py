@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import SuperGreenAPI, SuperGreenApiError
 from .const import (
@@ -83,6 +84,39 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle a controller found via mDNS (_http._tcp, name supergreencontroller*)."""
+        host = str(discovery_info.ip_address)
+        session = async_get_clientsession(self.hass)
+        api = SuperGreenAPI(host, session)
+        try:
+            device = await async_detect_device(api)
+        except SuperGreenApiError:
+            # Not reachable, needs auth, or not actually an SGL controller.
+            return self.async_abort(reason="cannot_connect")
+
+        await self.async_set_unique_id(device.client_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._discovered = {CONF_HOST: host, "name": device.name}
+        self.context["title_placeholders"] = {"name": device.name}
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm adding a discovered controller."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._discovered["name"],
+                data={CONF_HOST: self._discovered[CONF_HOST], CONF_AUTH: None},
+            )
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={"name": self._discovered["name"]},
         )
 
     @staticmethod

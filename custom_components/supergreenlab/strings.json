@@ -9,13 +9,18 @@
           "username": "Username (optional)",
           "password": "Password (optional)"
         }
+      },
+      "zeroconf_confirm": {
+        "title": "SuperGreenLab Controller",
+        "description": "Set up the discovered controller \"{name}\"?"
       }
     },
     "error": {
       "cannot_connect": "Failed to connect to the controller. Check the IP address and that it is on the network."
     },
     "abort": {
-      "already_configured": "This controller is already configured."
+      "already_configured": "This controller is already configured.",
+      "cannot_connect": "Could not reach the discovered controller (it may need an auth token — add it manually instead)."
     }
   },
   "options": {
