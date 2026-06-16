@@ -52,6 +52,22 @@ async def test_remove_stale_device_allowed(hass: HomeAssistant, setup_entry):
     assert await async_remove_config_entry_device(hass, setup_entry, box0) is False
 
 
+async def test_write_failure_raises_translated(hass: HomeAssistant, setup_entry):
+    """A device write error surfaces as a translated HomeAssistantError."""
+    from unittest.mock import patch
+
+    import pytest
+    from homeassistant.exceptions import HomeAssistantError
+
+    from custom_components.supergreenlab.api import SuperGreenApiError
+
+    coord = setup_entry.runtime_data.fast
+    with patch.object(coord.api, "set_int", side_effect=SuperGreenApiError("boom")):
+        with pytest.raises(HomeAssistantError) as exc:
+            await coord.async_set_int("BOX_0_TEMP_SOURCE", 1)
+    assert exc.value.translation_key == "write_failed"
+
+
 async def test_unload(hass: HomeAssistant, setup_entry):
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()

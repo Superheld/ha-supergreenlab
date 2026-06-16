@@ -6,9 +6,12 @@ import time
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .api import SuperGreenApiError
 from .catalog import BUTTONS, expand
+from .const import DOMAIN
 from .coordinator import SuperGreenConfigEntry
 from .entity import SGLCatalogEntity
 
@@ -34,4 +37,11 @@ class SuperGreenButton(SGLCatalogEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Trigger the action: write the current unix time, or 1."""
         value = int(time.time()) if self._def.press_now else 1
-        await self.coordinator.api.set_int(self._key, value)
+        try:
+            await self.coordinator.api.set_int(self._key, value)
+        except SuperGreenApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"key": self._key, "error": str(err)},
+            ) from err

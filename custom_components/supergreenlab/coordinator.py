@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import SuperGreenAPI, SuperGreenApiError, SuperGreenAuthError
@@ -117,7 +117,14 @@ class SuperGreenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int | None
 
     async def async_set_int(self, key: str, value: int) -> None:
         """Write a key and optimistically update the cached value."""
-        await self.api.set_int(key, value)
+        try:
+            await self.api.set_int(key, value)
+        except SuperGreenApiError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"key": key, "error": str(err)},
+            ) from err
         data = dict(self.data or {})
         data[key] = value
         self.async_set_updated_data(data)

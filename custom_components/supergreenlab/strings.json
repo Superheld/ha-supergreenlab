@@ -44,6 +44,11 @@
       "wrong_device": "That is a different controller than the one configured here. Use the same device, or add the other one separately."
     }
   },
+  "exceptions": {
+    "write_failed": {
+      "message": "Failed to update {key} on the controller: {error}"
+    }
+  },
   "options": {
     "step": {
       "init": {
