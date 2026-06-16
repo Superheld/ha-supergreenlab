@@ -18,6 +18,9 @@ from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateC
 from .entity import SGLCatalogEntity
 from .tz import device_to_local_hm, local_to_device_hm
 
+# Serialize writes to the single-threaded controller; reads are coordinator-driven.
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

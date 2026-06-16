@@ -49,6 +49,14 @@ On HA Container / Core, copy `custom_components/supergreenlab` into your
 `config/custom_components/` folder instead.
 </details>
 
+### Removing
+
+**Settings → Devices & Services → SuperGreenLab Controller → ⋮ → Delete** removes
+the controller and all its entities. To uninstall completely, then remove the
+repository from **HACS** (⋮ → Remove) and restart Home Assistant. (A dashboard
+you created from the strategy/templates is separate — delete it under *Settings →
+Dashboards* if you don't want it.)
+
 ## Setup
 
 1. **Settings → Devices & Services → Add Integration → SuperGreenLab Controller**.

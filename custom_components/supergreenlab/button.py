@@ -12,6 +12,9 @@ from .catalog import BUTTONS, expand
 from .coordinator import SuperGreenConfigEntry
 from .entity import SGLCatalogEntity
 
+# Serialize writes to the single-threaded controller; reads are coordinator-driven.
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

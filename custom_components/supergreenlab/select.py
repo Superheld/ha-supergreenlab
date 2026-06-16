@@ -65,6 +65,10 @@ _MODE_KEYWORDS = (
 )
 
 
+# Serialize writes to the single-threaded controller; reads are coordinator-driven.
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SuperGreenConfigEntry,

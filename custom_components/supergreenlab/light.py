@@ -33,6 +33,10 @@ def _brightness_to_dim(brightness: int) -> int:
     return round(brightness * _DIM_MAX / 255)
 
 
+# Serialize writes to the single-threaded controller; reads are coordinator-driven.
+PARALLEL_UPDATES = 1
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SuperGreenConfigEntry,

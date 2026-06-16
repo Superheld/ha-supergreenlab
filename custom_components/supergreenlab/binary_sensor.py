@@ -10,6 +10,9 @@ from .catalog import BINARY_SENSORS, EntityDef, expand
 from .coordinator import SGLDevice, SuperGreenConfigEntry, SuperGreenDataUpdateCoordinator
 from .entity import SGLCatalogEntity
 
+# Read-only; values come from the coordinator, no per-entity polling.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -2,7 +2,7 @@
   "domain": "supergreenlab",
   "name": "SuperGreenLab Controller",
   "after_dependencies": ["frontend", "http"],
-  "codeowners": [],
+  "codeowners": ["@Superheld"],
   "config_flow": true,
   "documentation": "https://github.com/Superheld/ha-supergreenlab",
   "integration_type": "device",
