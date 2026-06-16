@@ -255,23 +255,29 @@ mode-dependent fields (shown/hidden via HA's `visibility`). It detects your boxe
 and resolves the real entity ids itself, so there's nothing to adjust and it
 keeps working after re-adds.
 
-Create a new dashboard (**Settings → Dashboards → Add dashboard → New dashboard
-from scratch**), open its **raw config editor** (⋮ → *Edit in YAML*) and set:
+**Clickable (HA 2026.5+):** **Settings → Dashboards → Add dashboard** → under
+**“Community dashboards”** pick **SuperGreenLab**.
 
-```yaml
-strategy:
-  type: custom:sgl-dashboard
-views: []
-```
+**Via YAML (any version):**
+1. **Settings → Dashboards → Add dashboard → New dashboard from scratch** → give
+   it a name → it creates an empty dashboard.
+2. **Open** that dashboard, enter edit mode (top-right pencil), then **⋮ → Raw
+   configuration editor**.
+3. Replace the whole content with exactly:
+   ```yaml
+   strategy:
+     type: custom:sgl-dashboard
+   ```
+   No `views:` — a *dashboard* strategy generates the whole dashboard itself.
 
-That's it — the views are generated. (HA can't add a dashboard to your sidebar by
-itself, so this one-time create step is needed.)
+> Want it inside an existing dashboard instead of a dedicated one? That's a
+> *view* strategy — ask and we'll add one (it generates a single view you drop
+> into any dashboard, without replacing it).
 
-> **If you get `Timeout waiting for strategy element ll-strategy-dashboard-sgl-dashboard`:**
-> the bundled script hasn't loaded yet (usually a cached old copy). **Hard-refresh**
-> the browser (Ctrl/Cmd+Shift+R) and retry. If it persists, add the script as a
-> Lovelace resource — **Settings → Dashboards → ⋮ → Resources → Add**, URL
-> `/supergreenlab/sgl-cards.js`, type **JavaScript module** — then reload.
+> **If you get `Timeout waiting for strategy element …`:** the bundled script
+> hasn't loaded — **hard-refresh** the browser (Ctrl/Cmd+Shift+R). If it persists,
+> open `http://<your-ha>:8123/supergreenlab/sgl-cards.js` in a tab: it should load
+> and contain `ll-strategy-dashboard-sgl-dashboard`.
 
 ### Paste-in templates (manual)
 
