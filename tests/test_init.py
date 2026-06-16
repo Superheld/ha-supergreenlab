@@ -37,6 +37,21 @@ async def test_controller_and_box_devices(hass: HomeAssistant, setup_entry):
     assert len(devices) == 2
 
 
+async def test_remove_stale_device_allowed(hass: HomeAssistant, setup_entry):
+    """A device the controller no longer exposes may be deleted; a live one not."""
+    from custom_components.supergreenlab import async_remove_config_entry_device
+
+    reg = dr.async_get(hass)
+    box0 = reg.async_get_device(identifiers={("supergreenlab", "abc123_box_0")})
+    stale = reg.async_get_or_create(
+        config_entry_id=setup_entry.entry_id,
+        identifiers={("supergreenlab", "abc123_box_2")},
+    )
+
+    assert await async_remove_config_entry_device(hass, setup_entry, stale) is True
+    assert await async_remove_config_entry_device(hass, setup_entry, box0) is False
+
+
 async def test_unload(hass: HomeAssistant, setup_entry):
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
