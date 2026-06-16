@@ -208,8 +208,36 @@ custom_components/supergreenlab/
   catalog.py         the single declarative entity registry
   sources.py         generated enum / source maps
   entity.py          base entities + device info
+  diagnostics.py     redacted config-entry diagnostics
   sensor.py binary_sensor.py number.py select.py switch.py time.py light.py button.py
+  strings.json icons.json translations/en.json   names + icons (see below)
+scripts/gen_translations.py   regenerates the entity translations from the catalog
+QUALITY.md           per-rule quality-scale self-assessment
 ```
+
+## Quality scale & translations
+
+`QUALITY.md` tracks every Home Assistant quality-scale rule and its status. The
+code is at Gold level; the one outstanding blocker is `brands` (a logo PR to the
+external `home-assistant/brands` repo), which gates the official badge but not
+custom-repo installation.
+
+Entity **names** and **icons** are not hardcoded on the entities — they live in
+`strings.json` / `translations/en.json` (`entity.<platform>.<key>.name`) and
+`icons.json`, resolved via each entity's `translation_key`. For catalogued
+entities those files are generated from `catalog.py`, the single source of
+truth:
+
+```bash
+python scripts/gen_translations.py   # run after adding/renaming catalog entries
+```
+
+`entity_translation_key()` drops placeholders (`BOX_{box}_TEMP` → `box_temp`);
+the per-instance index (`{led}`/`{n}`/`{motor}`) is supplied at runtime as a
+translation placeholder, and the box context comes from the box sub-device.
+Hand-written entities (light, fan/blower mode, season-date, sunglasses) are
+listed in the script's `_HANDWRITTEN`. `test_every_catalog_key_has_a_translation`
+fails if a catalogued key is missing its name/icon.
 
 ## Testing
 
@@ -223,9 +251,11 @@ pip install -r requirements_test.txt
 pytest -q
 ```
 
-Covered: config flow, setup / entity creation / single-device model, control
-writes (light, time, select, number, button), the present-only source filter +
-its fallback, the light-phase select (write + derivation), the fan/blower mode
+Covered: config flow (user / zeroconf / reauth / reconfigure), setup / entity
+creation / controller + box device model, stale-device removal, the HTTP client
+and its error mapping (`test_api.py`), translated write failures, name
+resolution from translations, control writes (light, time, select, number,
+button), the present-only source filter + its fallback, the fan/blower mode
 presets, options layout + settings, and catalog / source decoding invariants.
 
 > Note: the suite needs the Python version Home Assistant targets (3.13). It

@@ -74,7 +74,10 @@ Services**, just confirm it.
    token on the device.
 
 The controller's chip MAC is used as its unique id, so a changing DHCP address
-won't create duplicates — just re-run setup with the new IP.
+won't create duplicates. If the IP does change, open the integration's
+**⋮ → Reconfigure** and enter the new address — your entities and their history
+are kept. If the device later asks for an auth token, Home Assistant prompts you
+to re-authenticate automatically.
 
 ### Configure your boxes
 
