@@ -267,6 +267,12 @@ views: []
 That's it — the views are generated. (HA can't add a dashboard to your sidebar by
 itself, so this one-time create step is needed.)
 
+> **If you get `Timeout waiting for strategy element ll-strategy-dashboard-sgl-dashboard`:**
+> the bundled script hasn't loaded yet (usually a cached old copy). **Hard-refresh**
+> the browser (Ctrl/Cmd+Shift+R) and retry. If it persists, add the script as a
+> Lovelace resource — **Settings → Dashboards → ⋮ → Resources → Add**, URL
+> `/supergreenlab/sgl-cards.js`, type **JavaScript module** — then reload.
+
 ### Paste-in templates (manual)
 
 > These are static; adjust the entity ids to your box.
