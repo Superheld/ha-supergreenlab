@@ -360,9 +360,18 @@ class SglBoxCard extends HTMLElement {
   }
 }
 
-customElements.define("sgl-fan-card", SglFanCard);
-customElements.define("sgl-light-card", SglLightCard);
-customElements.define("sgl-box-card", SglBoxCard);
+// Define each element only once. If this module is loaded twice (e.g. via both
+// add_extra_js_url and a manual Lovelace resource, or a stale cached copy), an
+// unguarded re-define throws and aborts the rest of the module — which would
+// stop later registrations (notably the dashboard strategy) from running.
+function _define(name, cls) {
+  if (customElements.get && customElements.get(name)) return;
+  customElements.define(name, cls);
+}
+
+_define("sgl-fan-card", SglFanCard);
+_define("sgl-light-card", SglLightCard);
+_define("sgl-box-card", SglBoxCard);
 window.customCards = window.customCards || [];
 window.customCards.push({
   type: "sgl-light-card",
@@ -510,4 +519,15 @@ export class SglDashboardStrategy extends HTMLElement {
   }
 }
 
-customElements.define("ll-strategy-dashboard-sgl-dashboard", SglDashboardStrategy);
+_define("ll-strategy-dashboard-sgl-dashboard", SglDashboardStrategy);
+
+// Offer the strategy in HA's "new dashboard" dialog (HA 2026.5+); harmless on
+// older versions.
+window.customStrategies = window.customStrategies || [];
+if (!window.customStrategies.some((s) => s.type === "sgl-dashboard")) {
+  window.customStrategies.push({
+    type: "sgl-dashboard",
+    strategyType: "dashboard",
+    name: "SuperGreenLab",
+  });
+}
