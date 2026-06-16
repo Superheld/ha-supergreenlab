@@ -8,9 +8,10 @@ from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import SuperGreenAPI, SuperGreenApiError
+from .api import SuperGreenAPI, SuperGreenApiError, SuperGreenAuthError
 from .const import (
     CONF_FAST_INTERVAL,
     DOMAIN,
@@ -106,6 +107,10 @@ class SuperGreenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, int | None
         try:
             for key in self._keys:
                 data[key] = await self.api.get_int(key)
+        except SuperGreenAuthError as err:
+            # Credentials became invalid (e.g. the device's auth token changed);
+            # trigger the reauth flow instead of just marking entities offline.
+            raise ConfigEntryAuthFailed(str(err)) from err
         except SuperGreenApiError as err:
             raise UpdateFailed(str(err)) from err
         return data

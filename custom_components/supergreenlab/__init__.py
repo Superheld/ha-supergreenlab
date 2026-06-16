@@ -9,11 +9,11 @@ from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import async_get_integration
 
-from .api import SuperGreenAPI, SuperGreenApiError
+from .api import SuperGreenAPI, SuperGreenApiError, SuperGreenAuthError
 from .config_flow import CONF_AUTH
 from .const import CONF_HOST, DOMAIN
 from .coordinator import (
@@ -74,6 +74,8 @@ async def async_setup_entry(
 
     try:
         device = await async_detect_device(api)
+    except SuperGreenAuthError as err:
+        raise ConfigEntryAuthFailed(str(err)) from err
     except SuperGreenApiError as err:
         raise ConfigEntryNotReady(f"Cannot reach controller: {err}") from err
 

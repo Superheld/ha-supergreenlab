@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .api import SuperGreenAPI, SuperGreenApiError
+from .api import SuperGreenAPI, SuperGreenApiError, SuperGreenAuthError
 from .const import (
     CONF_FAST_INTERVAL,
     CONF_HOST,
@@ -42,6 +42,13 @@ STEP_USER_SCHEMA = vol.Schema(
     }
 )
 
+STEP_REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
+)
+
 
 def _make_auth(username: str | None, password: str | None) -> str | None:
     """Build the base64 Basic-auth token expected by the firmware."""
@@ -56,6 +63,23 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _async_probe(self, host: str, auth: str | None):
+        """Probe a controller, returning ``(device, error_key)``.
+
+        ``error_key`` is ``None`` on success, otherwise ``"invalid_auth"`` or
+        ``"cannot_connect"`` so callers can surface the right form error.
+        """
+        session = async_get_clientsession(self.hass)
+        api = SuperGreenAPI(host, session, auth=auth)
+        try:
+            return await async_detect_device(api), None
+        except SuperGreenAuthError as err:
+            _LOGGER.debug("Auth rejected by %s: %s", host, err)
+            return None, "invalid_auth"
+        except SuperGreenApiError as err:
+            _LOGGER.debug("Cannot connect to %s: %s", host, err)
+            return None, "cannot_connect"
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -67,13 +91,9 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
             auth = _make_auth(
                 user_input.get(CONF_USERNAME), user_input.get(CONF_PASSWORD)
             )
-            session = async_get_clientsession(self.hass)
-            api = SuperGreenAPI(host, session, auth=auth)
-            try:
-                device = await async_detect_device(api)
-            except SuperGreenApiError as err:
-                _LOGGER.debug("Cannot connect to %s: %s", host, err)
-                errors["base"] = "cannot_connect"
+            device, error = await self._async_probe(host, auth)
+            if error:
+                errors["base"] = error
             else:
                 await self.async_set_unique_id(device.client_id)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -84,6 +104,79 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Let the user change the controller's host/IP (and credentials).
+
+        Common case: DHCP handed the controller a new IP. This updates the
+        existing entry in place instead of forcing a remove + re-add, which
+        would lose all entities and their history.
+        """
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST].strip()
+            auth = _make_auth(
+                user_input.get(CONF_USERNAME), user_input.get(CONF_PASSWORD)
+            )
+            device, error = await self._async_probe(host, auth)
+            if error:
+                errors["base"] = error
+            else:
+                # Guard against pointing the entry at a *different* controller.
+                await self.async_set_unique_id(device.client_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry, data={CONF_HOST: host, CONF_AUTH: auth}
+                )
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str,
+                vol.Optional(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): str,
+            }
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Start reauth after the controller rejected the stored credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Ask for new credentials and update the entry if they work."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            auth = _make_auth(
+                user_input.get(CONF_USERNAME), user_input.get(CONF_PASSWORD)
+            )
+            device, error = await self._async_probe(entry.data[CONF_HOST], auth)
+            if error:
+                errors["base"] = error
+            else:
+                await self.async_set_unique_id(device.client_id)
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, CONF_AUTH: auth}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_SCHEMA,
+            errors=errors,
+            description_placeholders={"name": entry.title},
         )
 
     async def async_step_zeroconf(

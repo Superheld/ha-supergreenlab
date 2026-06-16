@@ -25,6 +25,15 @@ class SuperGreenApiError(Exception):
     """Raised when the controller cannot be reached or returns an error."""
 
 
+class SuperGreenAuthError(SuperGreenApiError):
+    """Raised when the controller rejects the credentials (HTTP 401).
+
+    A subclass of :class:`SuperGreenApiError` so existing ``except`` blocks keep
+    working, while callers that care about auth (setup, coordinator) can catch
+    it specifically and trigger Home Assistant's reauth flow.
+    """
+
+
 class SuperGreenAPI:
     """Minimal wrapper around the controller's REST endpoints."""
 
@@ -68,7 +77,9 @@ class SuperGreenAPI:
                 method, url, headers=self._headers(), timeout=self._timeout
             ) as resp:
                 if resp.status == 401:
-                    raise SuperGreenApiError("Authentication required or wrong credentials")
+                    raise SuperGreenAuthError(
+                        "Authentication required or wrong credentials"
+                    )
                 if resp.status == 404:
                     raise SuperGreenApiError(f"Unknown key for {path}: {params!r}")
                 if resp.status >= 400:
@@ -111,6 +122,10 @@ class SuperGreenAPI:
             async with self._session.get(
                 url, headers=self._headers(), timeout=self._timeout
             ) as resp:
+                if resp.status == 401:
+                    raise SuperGreenAuthError(
+                        "Authentication required or wrong credentials"
+                    )
                 if resp.status >= 400:
                     raise SuperGreenApiError(f"HTTP {resp.status} fetching config.json")
                 text = await resp.text()

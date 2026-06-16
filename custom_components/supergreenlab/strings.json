@@ -13,14 +13,35 @@
       "zeroconf_confirm": {
         "title": "SuperGreenLab Controller",
         "description": "Set up the discovered controller \"{name}\"?"
+      },
+      "reconfigure": {
+        "title": "Reconfigure controller",
+        "description": "Update the address of your controller (for example after its IP changed). Credentials are only needed if the device has an HTTP auth token set.",
+        "data": {
+          "host": "Host or IP address",
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate controller",
+        "description": "The controller \"{name}\" rejected the stored credentials. Enter the current username and password.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to the controller. Check the IP address and that it is on the network."
+      "cannot_connect": "Failed to connect to the controller. Check the IP address and that it is on the network.",
+      "invalid_auth": "The controller rejected these credentials."
     },
     "abort": {
       "already_configured": "This controller is already configured.",
-      "cannot_connect": "Could not reach the discovered controller (it may need an auth token — add it manually instead)."
+      "cannot_connect": "Could not reach the discovered controller (it may need an auth token — add it manually instead).",
+      "reauth_successful": "Re-authentication was successful.",
+      "reconfigure_successful": "The controller address was updated.",
+      "wrong_device": "That is a different controller than the one configured here. Use the same device, or add the other one separately."
     }
   },
   "options": {
