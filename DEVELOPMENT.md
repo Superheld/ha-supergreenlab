@@ -263,17 +263,34 @@ Add tests with every change — Python for entity logic, node for card resolutio
 
 ## Release workflow
 
-Branch per change (never commit straight to `main`), fast-forward merge, then
-tag a release so HACS shows the update:
+Work flows **feature → `dev` → `main`**. Never commit straight to `dev`/`main`;
+use a feature branch and fast-forward merge. The `version` in `manifest.json` is
+set **at release time**, not during feature work.
+
+Stable release:
 
 ```bash
-git checkout -b feature/x
-# … changes …
-git checkout main && git merge --ff-only feature/x && git push origin main
-gh release create vX.Y.Z --title vX.Y.Z --notes "…"
+git checkout -b feature/x dev
+# … changes … (do NOT touch manifest version)
+git checkout dev && git merge --ff-only feature/x && git push origin dev
+# bump manifest.json version to X.Y.Z ("Release vX.Y.Z" commit), then:
+git checkout main && git merge --ff-only dev && git push origin main
+gh release create vX.Y.Z --target main --title vX.Y.Z --notes "…"
 ```
 
-Bump `version` in `manifest.json` to match the tag.
+### Beta / test channel (HACS)
+
+HACS can't install an arbitrary branch for an integration that has releases, so
+the test channel is **pre-release tags** cut from `dev`:
+
+```bash
+# manifest.json version = X.Y.Zb1, "Pre-release vX.Y.Zb1" commit on dev, push
+gh release create vX.Y.Zb1 --target dev --prerelease --title vX.Y.Zb1 --notes "…"
+```
+
+Testers enable it in HACS: the integration → ⋮ → **Redownload** → toggle **Show
+beta versions** → pick the beta → restart HA. Keep this out of the user-facing
+README (testers only). Stable releases supersede the beta automatically.
 
 ## Bundled Lovelace cards (`sgl-cards.js`)
 
