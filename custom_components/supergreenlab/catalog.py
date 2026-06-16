@@ -21,6 +21,7 @@ concrete instances at setup time:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 
 from .const import MAX_BOXES, MAX_LED_CHANNELS, VPD_DIVISOR
@@ -72,6 +73,30 @@ class EntityDef:
 def is_structural(key_template: str) -> bool:
     """Return True if writing this key requires a config-entry reload."""
     return key_template in STRUCTURAL_KEYS
+
+
+_PLACEHOLDER_RE = re.compile(r"\{(\w+)\}")
+
+
+def entity_translation_key(d: EntityDef) -> str:
+    """Stable per-platform translation key derived from the catalog key.
+
+    Placeholders are dropped (``BOX_{box}_TEMP`` -> ``box_temp``) so one key
+    covers every expanded instance; the per-instance index is supplied as a
+    translation placeholder instead.
+    """
+    base = _PLACEHOLDER_RE.sub("", d.key)
+    return re.sub(r"_+", "_", base).strip("_").lower()
+
+
+def entity_translation_name(d: EntityDef) -> str:
+    """The display-name template stored in the translations.
+
+    The box context is supplied by the box sub-device, so the ``Box {box} ``
+    prefix is stripped; any remaining placeholder (``{led}``/``{n}``/
+    ``{motor}``) stays and is filled from translation placeholders at runtime.
+    """
+    return d.name.replace("Box {box} ", "")
 
 
 # --- sensors (live values) -------------------------------------------------

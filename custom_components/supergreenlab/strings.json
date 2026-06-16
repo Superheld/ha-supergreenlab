@@ -44,6 +44,246 @@
       "wrong_device": "That is a different controller than the one configured here. Use the same device, or add the other one separately."
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "box_timer_output": {
+        "name": "Light on"
+      },
+      "hx711_present": {
+        "name": "HX711 #{n} present"
+      },
+      "scd30_present": {
+        "name": "SCD30 #{n} present"
+      },
+      "sht21_present": {
+        "name": "SHT21 #{n} present"
+      },
+      "valve_open": {
+        "name": "Valve open"
+      }
+    },
+    "button": {
+      "box_started_at": {
+        "name": "Start season"
+      },
+      "reboot": {
+        "name": "Restart controller"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light {led}"
+      }
+    },
+    "number": {
+      "box_blower_max": {
+        "name": "Blower speed max"
+      },
+      "box_blower_min": {
+        "name": "Blower speed min"
+      },
+      "box_blower_ref_max": {
+        "name": "Blower reference to"
+      },
+      "box_blower_ref_min": {
+        "name": "Blower reference from"
+      },
+      "box_duration_days": {
+        "name": "Season duration"
+      },
+      "box_fan_max": {
+        "name": "Fan speed max"
+      },
+      "box_fan_min": {
+        "name": "Fan speed min"
+      },
+      "box_fan_ref_max": {
+        "name": "Fan reference to"
+      },
+      "box_fan_ref_min": {
+        "name": "Fan reference from"
+      },
+      "box_sim_duration_days": {
+        "name": "Season sim days"
+      },
+      "box_start_day": {
+        "name": "Season start day"
+      },
+      "box_start_month": {
+        "name": "Season start month"
+      },
+      "box_timer_emerson_ratio": {
+        "name": "Emerson ratio"
+      },
+      "box_watering_duration": {
+        "name": "Watering duration"
+      },
+      "box_watering_left": {
+        "name": "Water now"
+      },
+      "box_watering_period": {
+        "name": "Watering period"
+      },
+      "box_watering_power": {
+        "name": "Watering power"
+      },
+      "hx711_weight_calibration": {
+        "name": "HX711 #{n} calibration"
+      },
+      "hx711_weight_offset": {
+        "name": "HX711 #{n} tare offset"
+      },
+      "motor_duty_testing": {
+        "name": "Motor {motor} test duty"
+      },
+      "motor_max": {
+        "name": "Motor {motor} max"
+      },
+      "motor_min": {
+        "name": "Motor {motor} min"
+      },
+      "scd30_vpd_leaf_offset": {
+        "name": "SCD30 #{n} leaf offset"
+      },
+      "sht21_vpd_leaf_offset": {
+        "name": "SHT21 #{n} leaf offset"
+      },
+      "status_led_dim": {
+        "name": "Status LED brightness"
+      },
+      "valve_cycle_div": {
+        "name": "Valve cycle divisions"
+      },
+      "valve_cycle_div_duration": {
+        "name": "Valve cycle duration"
+      },
+      "valve_ref_max": {
+        "name": "Valve ref max"
+      },
+      "valve_ref_min": {
+        "name": "Valve ref min"
+      },
+      "valve_ref_on_max": {
+        "name": "Valve on-ref max"
+      },
+      "valve_ref_on_min": {
+        "name": "Valve on-ref min"
+      }
+    },
+    "select": {
+      "blower_mode": {
+        "name": "Blower mode"
+      },
+      "box_blower_ref_source": {
+        "name": "Blower source (advanced)"
+      },
+      "box_co2_source": {
+        "name": "CO2 source"
+      },
+      "box_fan_ref_source": {
+        "name": "Fan source (advanced)"
+      },
+      "box_humi_source": {
+        "name": "Humidity source"
+      },
+      "box_temp_source": {
+        "name": "Temperature source"
+      },
+      "box_timer_type": {
+        "name": "Timer mode"
+      },
+      "box_vpd_source": {
+        "name": "VPD source"
+      },
+      "box_weight_source": {
+        "name": "Weight source"
+      },
+      "fan_mode": {
+        "name": "Fan mode"
+      },
+      "led_type": {
+        "name": "Light {led} spectrum"
+      },
+      "motor_source": {
+        "name": "Motor {motor} source"
+      },
+      "valve_mode": {
+        "name": "Valve mode"
+      },
+      "valve_ref_on_source": {
+        "name": "Valve on-ref source"
+      },
+      "valve_ref_source": {
+        "name": "Valve ref source"
+      }
+    },
+    "sensor": {
+      "box_blower_duty": {
+        "name": "Blower"
+      },
+      "box_co2": {
+        "name": "CO2"
+      },
+      "box_fan_duty": {
+        "name": "Fan"
+      },
+      "box_humi": {
+        "name": "Humidity"
+      },
+      "box_temp": {
+        "name": "Temperature"
+      },
+      "box_timer_output": {
+        "name": "Light output"
+      },
+      "box_vpd": {
+        "name": "VPD"
+      },
+      "box_weight": {
+        "name": "Weight"
+      },
+      "n_restarts": {
+        "name": "Restarts"
+      },
+      "season_date": {
+        "name": "Season date"
+      },
+      "state": {
+        "name": "State"
+      },
+      "valve_ref": {
+        "name": "Valve reference"
+      },
+      "valve_ref_on": {
+        "name": "Valve on-reference"
+      }
+    },
+    "switch": {
+      "box_timer_emerson_power": {
+        "name": "Emerson effect"
+      },
+      "led_fade": {
+        "name": "Light {led} fade"
+      },
+      "leds_fastmode": {
+        "name": "LED fast PWM"
+      },
+      "motors_curve": {
+        "name": "Motor soft curve"
+      },
+      "sunglasses_mode": {
+        "name": "Sunglasses mode"
+      }
+    },
+    "time": {
+      "box_off_hour": {
+        "name": "Light off time"
+      },
+      "box_on_hour": {
+        "name": "Light on time"
+      }
+    }
+  },
   "exceptions": {
     "write_failed": {
       "message": "Failed to update {key} on the controller: {error}"

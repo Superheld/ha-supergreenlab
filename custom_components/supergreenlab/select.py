@@ -156,7 +156,6 @@ class SuperGreenVentModeSelect(SuperGreenEntity, SelectEntity):
     """Friendly fan/blower mode: sets reference source + range presets at once."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:fan-auto"
 
     def __init__(
         self,
@@ -172,8 +171,7 @@ class SuperGreenVentModeSelect(SuperGreenEntity, SelectEntity):
         self._source_key = f"BOX_{box}_{kind}_REF_SOURCE"
         self._min_key = f"BOX_{box}_{kind}_REF_MIN"
         self._max_key = f"BOX_{box}_{kind}_REF_MAX"
-        label = "Fan" if kind == "FAN" else "Blower"
-        self._attr_name = f"{label} mode"
+        self._attr_translation_key = "fan_mode" if kind == "FAN" else "blower_mode"
         self._attr_unique_id = self._unique_id(f"BOX_{box}_{kind}_MODE")
         self._attr_options = list(_VENT_RANGES)
 

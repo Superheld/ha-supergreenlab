@@ -163,3 +163,25 @@ async def test_vent_mode_follows_box_sensor_port(hass: HomeAssistant, setup_entr
     assert store["BOX_0_BLOWER_REF_SOURCE"] == 2  # SHT21 temp on port #2, not 1
     assert store["BOX_0_BLOWER_REF_MIN"] == 21
     assert store["BOX_0_BLOWER_REF_MAX"] == 30
+
+
+def test_every_catalog_key_has_a_translation():
+    """Each catalogued entity has a name (and any icon) in the translations."""
+    import json
+    from pathlib import Path
+
+    from custom_components.supergreenlab.catalog import (
+        ALL_DEFS,
+        BUTTONS,
+        entity_translation_key,
+    )
+
+    base = Path("custom_components/supergreenlab")
+    names = json.loads((base / "strings.json").read_text())["entity"]
+    icons = json.loads((base / "icons.json").read_text())["entity"]
+
+    for d in (*ALL_DEFS, *BUTTONS):
+        key = entity_translation_key(d)
+        assert key in names.get(d.platform, {}), f"missing name: {d.platform}.{key}"
+        if d.icon:
+            assert key in icons.get(d.platform, {}), f"missing icon: {d.platform}.{key}"

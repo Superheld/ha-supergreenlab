@@ -1,0 +1,81 @@
+{
+  "entity": {
+    "button": {
+      "box_started_at": {
+        "default": "mdi:calendar-start"
+      },
+      "reboot": {
+        "default": "mdi:restart"
+      }
+    },
+    "light": {
+      "light": {
+        "default": "mdi:led-strip-variant"
+      }
+    },
+    "number": {
+      "box_blower_max": {
+        "default": "mdi:fan-chevron-up"
+      },
+      "box_blower_min": {
+        "default": "mdi:fan-chevron-down"
+      },
+      "box_fan_max": {
+        "default": "mdi:fan-chevron-up"
+      },
+      "box_fan_min": {
+        "default": "mdi:fan-chevron-down"
+      },
+      "box_watering_duration": {
+        "default": "mdi:water"
+      },
+      "box_watering_left": {
+        "default": "mdi:watering-can"
+      },
+      "box_watering_period": {
+        "default": "mdi:water-outline"
+      }
+    },
+    "select": {
+      "blower_mode": {
+        "default": "mdi:fan-auto"
+      },
+      "box_timer_type": {
+        "default": "mdi:timer-cog"
+      },
+      "fan_mode": {
+        "default": "mdi:fan-auto"
+      },
+      "led_type": {
+        "default": "mdi:spectrum"
+      }
+    },
+    "sensor": {
+      "box_blower_duty": {
+        "default": "mdi:fan"
+      },
+      "box_fan_duty": {
+        "default": "mdi:fan"
+      },
+      "box_timer_output": {
+        "default": "mdi:brightness-percent"
+      },
+      "season_date": {
+        "default": "mdi:calendar-clock"
+      }
+    },
+    "switch": {
+      "sunglasses_mode": {
+        "default": "mdi:sunglasses"
+      }
+    },
+    "time": {
+      "box_off_hour": {
+        "default": "mdi:weather-sunset-down"
+      },
+      "box_on_hour": {
+        "default": "mdi:weather-sunset-up"
+      }
+    }
+  }
+}

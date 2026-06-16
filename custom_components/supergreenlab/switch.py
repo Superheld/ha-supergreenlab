@@ -67,7 +67,7 @@ class SuperGreenSunglassesSwitch(SuperGreenEntity, SwitchEntity):
     on the next poll). Handy as an automation target/condition.
     """
 
-    _attr_icon = "mdi:sunglasses"
+    _attr_translation_key = "sunglasses_mode"
 
     def __init__(
         self, coordinator: SuperGreenDataUpdateCoordinator, box: int
@@ -76,7 +76,6 @@ class SuperGreenSunglassesSwitch(SuperGreenEntity, SwitchEntity):
         super().__init__(coordinator, box=box)
         self._box = box
         self._key = f"BOX_{box}_LED_DIM"
-        self._attr_name = "Sunglasses mode"
         self._attr_unique_id = self._unique_id(f"BOX_{box}_SUNGLASSES")
 
     @property

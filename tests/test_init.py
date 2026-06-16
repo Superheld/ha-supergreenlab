@@ -23,6 +23,17 @@ async def test_vpd_scaled_to_kpa(hass: HomeAssistant, setup_entry):
     assert hass.states.get(eid).state == "1.45"
 
 
+async def test_entity_names_from_translations(hass: HomeAssistant, setup_entry):
+    """Names resolve via translation_key + box device, unchanged from before."""
+    temp = _entity_id(hass, "sensor", "BOX_0_TEMP")
+    assert hass.states.get(temp).attributes["friendly_name"] == "Box 0 Temperature"
+    # Placeholder (led index) is filled from translation placeholders.
+    light = er.async_get(hass).async_get_entity_id(
+        "light", "supergreenlab", "abc123_LED_0_DIM"
+    )
+    assert hass.states.get(light).attributes["friendly_name"] == "Box 0 Light 0"
+
+
 async def test_controller_and_box_devices(hass: HomeAssistant, setup_entry):
     reg = dr.async_get(hass)
     # The controller is the parent device.

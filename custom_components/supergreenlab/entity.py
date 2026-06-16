@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .catalog import EntityDef, is_structural
+from .catalog import EntityDef, entity_translation_key, is_structural
 from .const import DOMAIN, MANUFACTURER, MODEL
 from .coordinator import SGLDevice, SuperGreenDataUpdateCoordinator
 
@@ -93,20 +93,21 @@ class SGLCatalogEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
         self._def = definition
         self._key = definition.key.format(**placeholders)
         self._structural = is_structural(definition.key)
-        name = definition.name.format(**placeholders)
+        # Names come from the translations (entity-translations rule). The box
+        # context is supplied by the box sub-device, so only non-box indices are
+        # passed through as placeholders for the translated name.
+        self._attr_translation_key = entity_translation_key(definition)
+        self._attr_translation_placeholders = {
+            k: str(v) for k, v in placeholders.items() if k != "box"
+        }
         box = _box_for(device, placeholders)
         if box is not None:
             self._attr_device_info = box_device_info(device, box)
-            # The box device supplies the "Box N" context; drop it from the name.
-            name = name.removeprefix(f"Box {box} ")
         else:
             self._attr_device_info = controller_device_info(device, coordinator.api.host)
-        self._attr_name = name
         self._attr_unique_id = f"{device.client_id}_{self._key}"
         self._attr_entity_category = _CATEGORY.get(definition.category)
         self._attr_entity_registry_enabled_default = definition.enabled_default
-        if definition.icon:
-            self._attr_icon = definition.icon
 
     @property
     def _raw(self) -> int | None:

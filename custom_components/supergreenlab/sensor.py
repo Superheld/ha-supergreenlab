@@ -75,13 +75,12 @@ class SuperGreenSeasonDateSensor(SuperGreenEntity, SensorEntity):
     """
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_icon = "mdi:calendar-clock"
+    _attr_translation_key = "season_date"
 
     def __init__(self, coordinator: SuperGreenDataUpdateCoordinator, box: int) -> None:
         """Bind to a box's simulated-time key."""
         super().__init__(coordinator, box=box)
         self._key = f"BOX_{box}_SIMULATED_TIME"
-        self._attr_name = "Season date"
         self._attr_unique_id = self._unique_id(self._key)
 
     @property

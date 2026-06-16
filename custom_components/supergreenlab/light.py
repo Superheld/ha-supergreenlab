@@ -55,7 +55,7 @@ class SuperGreenLight(SuperGreenEntity, LightEntity):
 
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-    _attr_icon = "mdi:led-strip-variant"
+    _attr_translation_key = "light"
 
     def __init__(
         self, coordinator: SuperGreenDataUpdateCoordinator, led: int, box: int
@@ -66,7 +66,7 @@ class SuperGreenLight(SuperGreenEntity, LightEntity):
         self._key = f"LED_{led}_DIM"
         # Remember the last non-zero level so turn_on can restore it.
         self._last_dim = 100
-        self._attr_name = f"Light {led}"
+        self._attr_translation_placeholders = {"led": str(led)}
         self._attr_unique_id = self._unique_id(self._key)
 
     @property
