@@ -10,9 +10,8 @@ globalThis.HTMLElement = class {};
 globalThis.customElements = { define() {} };
 globalThis.window = { customCards: [] };
 
-const { resolveConfig, resolveLightConfig, resolveBoxConfig } = await import(
-  "../custom_components/supergreenlab/sgl-cards.js"
-);
+const { resolveConfig, resolveLightConfig, resolveBoxConfig, SglDashboardStrategy } =
+  await import("../custom_components/supergreenlab/sgl-cards.js");
 
 // Build a fake `hass` where every state id maps to the same device by default.
 function mkHass(stateIds, devices = {}) {
@@ -85,6 +84,46 @@ test("box card resolves sources + correlates spectrum by LED index", () => {
   assert.equal(c.temp_source, "select.box_0_temperature_source");
   assert.equal(c.humi_source, "select.box_0_humidity_source");
   assert.deepEqual(c.spectrum, ["select.light_0_spectrum"]);
+});
+
+test("dashboard strategy generates a sections view per box", async () => {
+  const states = {};
+  const entities = {};
+  const add = (id) => {
+    states[id] = { state: "x" };
+    entities[id] = { device_id: "boxdev0" };
+  };
+  add("select.box_0_timer_mode");
+  add("select.box_0_fan_mode");
+  add("time.box_0_on_time");
+  add("sensor.box_0_temperature");
+  add("number.box_0_fan_reference_from");
+  const hass = {
+    states,
+    entities,
+    devices: {
+      boxdev0: { id: "boxdev0", identifiers: [["supergreenlab", "abc123_box_0"]] },
+      ctrl: { id: "ctrl", identifiers: [["supergreenlab", "abc123"]] },
+    },
+  };
+  const dash = await SglDashboardStrategy.generate({}, hass);
+  assert.equal(dash.views.length, 1);
+  const view = dash.views[0];
+  assert.equal(view.title, "Box 0");
+  assert.equal(view.type, "sections");
+  // The fan reference field is gated on the fan mode being a sensor mode.
+  const flat = JSON.stringify(view);
+  assert.ok(flat.includes("number.box_0_fan_reference_from"));
+  assert.ok(flat.includes("select.box_0_fan_mode"));
+});
+
+test("dashboard strategy reports when no boxes exist", async () => {
+  const dash = await SglDashboardStrategy.generate(
+    {},
+    { states: {}, entities: {}, devices: {} },
+  );
+  assert.equal(dash.views.length, 1);
+  assert.ok(JSON.stringify(dash.views[0]).includes("No SuperGreenLab boxes"));
 });
 
 test("box card does not mix entities from other boxes", () => {

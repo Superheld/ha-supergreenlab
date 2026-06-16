@@ -379,3 +379,135 @@ window.customCards.push({
   name: "SuperGreenLab Box Card",
   description: "Per-box hardware setup: sensor sources + light spectrum.",
 });
+
+// ---------------------------------------------------------------------------
+// Dashboard strategy — generates a modern "Sections" dashboard, one view per
+// box, entirely from the device's entities. Use it with:
+//
+//   strategy:
+//     type: custom:sgl-dashboard
+//
+// It detects the box sub-devices, resolves each box's actual entity ids (so it
+// adapts to your install and never needs manual id fixes), and shows only the
+// fields a mode needs via native `visibility` conditions.
+// ---------------------------------------------------------------------------
+
+const _SENSOR_MODES = ["Temperature", "Humidity", "VPD", "CO2"];
+
+// Build one box's "sections" view from its entity ids.
+export function buildBoxView(boxNum, ents, hass) {
+  const has = (id) => id && hass.states[id];
+  const pick = (domain, sfx) =>
+    ents.find(
+      (id) => id.startsWith(`${domain}.`) && has(id) && sfx.some((s) => id.endsWith(s)),
+    );
+  const all = (domain, sfx) =>
+    ents
+      .filter(
+        (id) => id.startsWith(`${domain}.`) && has(id) && sfx.some((s) => id.endsWith(s)),
+      )
+      .sort();
+  const tile = (entity, extra) => (entity ? { type: "tile", entity, ...extra } : null);
+  const numTile = (entity, visibility) =>
+    entity
+      ? { type: "tile", entity, features: [{ type: "numeric-input" }], ...(visibility ? { visibility } : {}) }
+      : null;
+  const stateVis = (entity, state) => (entity ? [{ condition: "state", entity, state }] : undefined);
+
+  const mode = pick("select", ["_timer_mode"]);
+  const fanMode = pick("select", ["_fan_mode"]);
+  const blowerMode = pick("select", ["_blower_mode"]);
+  const onOff = stateVis(mode, "On/Off schedule");
+  const season = stateVis(mode, "Season");
+  const fanRefVis = stateVis(fanMode, _SENSOR_MODES);
+  const blowerRefVis = stateVis(blowerMode, _SENSOR_MODES);
+  const timeTile = (entity, vis) =>
+    entity
+      ? { type: "tile", entity, features: [{ type: "datetime-picker" }], ...(vis ? { visibility: vis } : {}) }
+      : null;
+
+  const sections = [];
+  const section = (heading, cards) => {
+    const cc = cards.filter(Boolean);
+    if (cc.length) sections.push({ type: "grid", cards: [{ type: "heading", heading }, ...cc] });
+  };
+
+  section("Lights", [
+    ...all("light", [""]).map((id) => tile(id, { features: [{ type: "light-brightness" }] })),
+    ...all("select", ["_spectrum"]).map((id) => tile(id)),
+  ]);
+  section("Light schedule", [
+    tile(mode),
+    timeTile(pick("time", ["_on_time"]), onOff),
+    timeTile(pick("time", ["_off_time"]), onOff),
+    tile(pick("sensor", ["_season_date"]), season ? { visibility: season } : undefined),
+    numTile(pick("number", ["_season_start_month"]), season),
+    numTile(pick("number", ["_season_start_day"]), season),
+    numTile(pick("number", ["_season_duration"]), season),
+    numTile(pick("number", ["_season_sim_days"]), season),
+    tile(pick("button", ["_start_season"]), season ? { visibility: season } : undefined),
+  ]);
+  section("Climate", [
+    tile(pick("sensor", ["_temperature"])),
+    tile(pick("sensor", ["_humidity"])),
+    tile(pick("sensor", ["_vpd"])),
+    tile(pick("sensor", ["_co2"])),
+  ]);
+  section("Fan", [
+    tile(pick("sensor", ["_fan"]), { name: "Fan now" }),
+    tile(fanMode),
+    numTile(pick("number", ["_fan_speed_min"])),
+    numTile(pick("number", ["_fan_speed_max"])),
+    numTile(pick("number", ["_fan_reference_from"]), fanRefVis),
+    numTile(pick("number", ["_fan_reference_to"]), fanRefVis),
+  ]);
+  section("Blower", [
+    tile(pick("sensor", ["_blower"]), { name: "Blower now" }),
+    tile(blowerMode),
+    numTile(pick("number", ["_blower_speed_min"])),
+    numTile(pick("number", ["_blower_speed_max"])),
+    numTile(pick("number", ["_blower_reference_from"]), blowerRefVis),
+    numTile(pick("number", ["_blower_reference_to"]), blowerRefVis),
+  ]);
+
+  return { title: `Box ${boxNum}`, type: "sections", sections };
+}
+
+export class SglDashboardStrategy extends HTMLElement {
+  static async generate(config, hass) {
+    const boxes = [];
+    for (const dev of Object.values(hass.devices || {})) {
+      const ident = (dev.identifiers || []).find(
+        (i) => i[0] === "supergreenlab" && /_box_\d+$/.test(i[1]),
+      );
+      if (!ident) continue;
+      const num = parseInt(ident[1].match(/_box_(\d+)$/)[1], 10);
+      const ents = Object.keys(hass.entities).filter(
+        (e) => hass.entities[e].device_id === dev.id,
+      );
+      boxes.push({ num, ents });
+    }
+    boxes.sort((a, b) => a.num - b.num);
+    const views = boxes.map((b) => buildBoxView(b.num, b.ents, hass));
+    if (!views.length) {
+      return {
+        title: "SuperGreenLab",
+        views: [
+          {
+            title: "SuperGreenLab",
+            cards: [
+              {
+                type: "markdown",
+                content:
+                  "No SuperGreenLab boxes found. Enable a box in the integration's options, then reload this dashboard.",
+              },
+            ],
+          },
+        ],
+      };
+    }
+    return { title: "SuperGreenLab", views };
+  }
+}
+
+customElements.define("ll-strategy-dashboard-sgl-dashboard", SglDashboardStrategy);

@@ -311,11 +311,14 @@ or manual dashboard resource is needed. Notes:
   shows only the timer mode + the inputs that mode needs (On/Off → on/off times;
   Season → season date + season settings). Per-channel brightness and "light on"
   are deliberately *not* in it.
-- **Direction:** the same mode-aware behaviour is now achievable *natively* with a
-  **Sections view + per-card `visibility` conditions** (see
-  `dashboards/example-box-sections.yaml`) — no custom JS, fits the modern design,
-  and uses explicit ids so it can't mis-resolve. That's the recommended path; the
-  custom cards may be retired in favour of it.
+- **Dashboard strategy:** `sgl-cards.js` also ships a **dashboard strategy**
+  (`SglDashboardStrategy`, registered as `ll-strategy-dashboard-sgl-dashboard`).
+  `static generate(config, hass)` finds the box sub-devices, and `buildBoxView()`
+  emits a native **Sections** view per box (tiles + `visibility`), resolving each
+  box's real entity ids from `hass`. Used via `strategy: {type: custom:sgl-dashboard}`
+  — auto-adapts to the install, no manual ids, survives re-adds. This is the
+  recommended modern presentation and supersedes both the custom cards and the
+  static example YAML (both kept for now).
 - `sgl-box-card` is the per-box **hardware setup** card (lean on purpose): two
   `{type: "section"}` groups — *Climate sensors* (the `*_SOURCE` selects) and
   *Light spectrum* (`LED_x_TYPE`). No live values / fan modes / schedule. Anchors

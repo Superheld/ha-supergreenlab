@@ -245,20 +245,36 @@ entity: select.supergreencontroller_box_0_timer_mode
 
 Any derived entity or the title can be overridden explicitly in the YAML.
 
-## Example dashboards
+## Dashboard
 
-> Note: Home Assistant integrations can't install a dashboard for you — these are
-> ready-to-paste templates. Settings → Dashboards → add a dashboard/view and
-> paste, then adjust the entity ids to your box.
+### Auto-generated (easiest)
 
-- **[`dashboards/example-box-sections.yaml`](dashboards/example-box-sections.yaml)**
-  *(recommended)* — a modern **Sections** view for one box using native **tile**
-  cards. The mode-dependent fields are shown/hidden with HA's built-in
-  **visibility conditions** (e.g. season fields only in Season mode, a fan's
-  reference range only when it follows a sensor). No custom card required — this is
-  the future-proof, native way.
+The integration ships a **dashboard strategy** that builds a complete modern
+dashboard for you — one **Sections** view per box, with native tiles and
+mode-dependent fields (shown/hidden via HA's `visibility`). It detects your boxes
+and resolves the real entity ids itself, so there's nothing to adjust and it
+keeps working after re-adds.
+
+Create a new dashboard (**Settings → Dashboards → Add dashboard → New dashboard
+from scratch**), open its **raw config editor** (⋮ → *Edit in YAML*) and set:
+
+```yaml
+strategy:
+  type: custom:sgl-dashboard
+views: []
+```
+
+That's it — the views are generated. (HA can't add a dashboard to your sidebar by
+itself, so this one-time create step is needed.)
+
+### Paste-in templates (manual)
+
+> These are static; adjust the entity ids to your box.
+
+- [`dashboards/example-box-sections.yaml`](dashboards/example-box-sections.yaml) —
+  a modern **Sections** view for one box (native tiles + visibility).
 - [`dashboards/example-box.yaml`](dashboards/example-box.yaml) — a simpler view
-  built from plain `entities` cards, if you prefer.
+  built from plain `entities` cards.
 
 ---
 
