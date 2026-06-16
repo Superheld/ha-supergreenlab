@@ -416,11 +416,13 @@ export function buildBoxView(boxNum, ents, hass) {
         (id) => id.startsWith(`${domain}.`) && has(id) && sfx.some((s) => id.endsWith(s)),
       )
       .sort();
-  const tile = (entity, extra) => (entity ? { type: "tile", entity, ...extra } : null);
-  const numTile = (entity, visibility) =>
-    entity
-      ? { type: "tile", entity, features: [{ type: "numeric-input" }], ...(visibility ? { visibility } : {}) }
-      : null;
+  // Plain tiles only — tile "features" (numeric-input / datetime-picker) caused
+  // "Configuration error" on some entity domains, so we tap-to-edit via more-info
+  // instead. Visibility hides a tile unless the mode calls for it.
+  const tile = (entity, vis, extra) =>
+    entity ? { type: "tile", entity, ...(vis ? { visibility: vis } : {}), ...extra } : null;
+  const gauge = (entity, name, max) =>
+    entity ? { type: "gauge", entity, name, min: 0, max, needle: true } : null;
   const stateVis = (entity, state) => (entity ? [{ condition: "state", entity, state }] : undefined);
 
   const mode = pick("select", ["_timer_mode"]);
@@ -430,10 +432,6 @@ export function buildBoxView(boxNum, ents, hass) {
   const season = stateVis(mode, "Season");
   const fanRefVis = stateVis(fanMode, _SENSOR_MODES);
   const blowerRefVis = stateVis(blowerMode, _SENSOR_MODES);
-  const timeTile = (entity, vis) =>
-    entity
-      ? { type: "tile", entity, features: [{ type: "datetime-picker" }], ...(vis ? { visibility: vis } : {}) }
-      : null;
 
   const sections = [];
   const section = (heading, cards) => {
@@ -442,41 +440,42 @@ export function buildBoxView(boxNum, ents, hass) {
   };
 
   section("Lights", [
-    ...all("light", [""]).map((id) => tile(id, { features: [{ type: "light-brightness" }] })),
+    ...all("light", [""]).map((id) => tile(id, undefined, { features: [{ type: "light-brightness" }] })),
     ...all("select", ["_spectrum"]).map((id) => tile(id)),
+    tile(pick("switch", ["sunglasses_mode"]), undefined, { name: "Work light (dim)" }),
   ]);
   section("Light schedule", [
     tile(mode),
-    timeTile(pick("time", ["_on_time"]), onOff),
-    timeTile(pick("time", ["_off_time"]), onOff),
-    tile(pick("sensor", ["_season_date"]), season ? { visibility: season } : undefined),
-    numTile(pick("number", ["_season_start_month"]), season),
-    numTile(pick("number", ["_season_start_day"]), season),
-    numTile(pick("number", ["_season_duration"]), season),
-    numTile(pick("number", ["_season_sim_days"]), season),
-    tile(pick("button", ["_start_season"]), season ? { visibility: season } : undefined),
+    tile(pick("time", ["_on_time"]), onOff),
+    tile(pick("time", ["_off_time"]), onOff),
+    tile(pick("sensor", ["_season_date"]), season),
+    tile(pick("number", ["_season_start_month"]), season),
+    tile(pick("number", ["_season_start_day"]), season),
+    tile(pick("number", ["_season_duration"]), season),
+    tile(pick("number", ["_season_sim_days"]), season),
+    tile(pick("button", ["_start_season"]), season),
   ]);
   section("Climate", [
-    tile(pick("sensor", ["_temperature"])),
-    tile(pick("sensor", ["_humidity"])),
-    tile(pick("sensor", ["_vpd"])),
-    tile(pick("sensor", ["_co2"])),
+    gauge(pick("sensor", ["_temperature"]), "Temp", 50),
+    gauge(pick("sensor", ["_humidity"]), "Humidity", 100),
+    gauge(pick("sensor", ["_vpd"]), "VPD", 3),
+    gauge(pick("sensor", ["_co2"]), "CO2", 2000),
   ]);
   section("Fan", [
-    tile(pick("sensor", ["_fan"]), { name: "Fan now" }),
+    gauge(pick("sensor", ["_fan"]), "Fan %", 100),
     tile(fanMode),
-    numTile(pick("number", ["_fan_speed_min"])),
-    numTile(pick("number", ["_fan_speed_max"])),
-    numTile(pick("number", ["_fan_reference_from"]), fanRefVis),
-    numTile(pick("number", ["_fan_reference_to"]), fanRefVis),
+    tile(pick("number", ["_fan_speed_min"])),
+    tile(pick("number", ["_fan_speed_max"])),
+    tile(pick("number", ["_fan_reference_from"]), fanRefVis),
+    tile(pick("number", ["_fan_reference_to"]), fanRefVis),
   ]);
   section("Blower", [
-    tile(pick("sensor", ["_blower"]), { name: "Blower now" }),
+    gauge(pick("sensor", ["_blower"]), "Blower %", 100),
     tile(blowerMode),
-    numTile(pick("number", ["_blower_speed_min"])),
-    numTile(pick("number", ["_blower_speed_max"])),
-    numTile(pick("number", ["_blower_reference_from"]), blowerRefVis),
-    numTile(pick("number", ["_blower_reference_to"]), blowerRefVis),
+    tile(pick("number", ["_blower_speed_min"])),
+    tile(pick("number", ["_blower_speed_max"])),
+    tile(pick("number", ["_blower_reference_from"]), blowerRefVis),
+    tile(pick("number", ["_blower_reference_to"]), blowerRefVis),
   ]);
 
   return { title: `Box ${boxNum}`, type: "sections", sections };

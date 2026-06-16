@@ -41,16 +41,12 @@ views:
           # On/Off schedule -> show the times
           - type: tile
             entity: time.box_0_on_time
-            features:
-              - type: datetime-picker
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
                 state: "On/Off schedule"
           - type: tile
             entity: time.box_0_off_time
-            features:
-              - type: datetime-picker
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
@@ -64,32 +60,24 @@ views:
                 state: Season
           - type: tile
             entity: number.box_0_season_start_month
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
                 state: Season
           - type: tile
             entity: number.box_0_season_start_day
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
                 state: Season
           - type: tile
             entity: number.box_0_season_duration
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
                 state: Season
           - type: tile
             entity: number.box_0_season_sim_days
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_timer_mode
@@ -127,17 +115,11 @@ views:
             entity: select.box_0_fan_mode
           - type: tile
             entity: number.box_0_fan_speed_min
-            features:
-              - type: numeric-input
           - type: tile
             entity: number.box_0_fan_speed_max
-            features:
-              - type: numeric-input
           # Reference range only matters for the sensor-following modes
           - type: tile
             entity: number.box_0_fan_reference_from
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_fan_mode
@@ -148,8 +130,6 @@ views:
                   - CO2
           - type: tile
             entity: number.box_0_fan_reference_to
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_fan_mode
@@ -171,16 +151,10 @@ views:
             entity: select.box_0_blower_mode
           - type: tile
             entity: number.box_0_blower_speed_min
-            features:
-              - type: numeric-input
           - type: tile
             entity: number.box_0_blower_speed_max
-            features:
-              - type: numeric-input
           - type: tile
             entity: number.box_0_blower_reference_from
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_blower_mode
@@ -191,8 +165,6 @@ views:
                   - CO2
           - type: tile
             entity: number.box_0_blower_reference_to
-            features:
-              - type: numeric-input
             visibility:
               - condition: state
                 entity: select.box_0_blower_mode

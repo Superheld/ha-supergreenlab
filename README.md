@@ -282,11 +282,6 @@ keeps working after re-adds.
 > *view* strategy — ask and we'll add one (it generates a single view you drop
 > into any dashboard, without replacing it).
 
-> **If you get `Timeout waiting for strategy element …`:** the bundled script
-> hasn't loaded — **hard-refresh** the browser (Ctrl/Cmd+Shift+R). If it persists,
-> open `http://<your-ha>:8123/supergreenlab/sgl-cards.js` in a tab: it should load
-> and contain `ll-strategy-dashboard-sgl-dashboard`.
-
 ### Paste-in templates (manual)
 
 > These are static; adjust the entity ids to your box.
