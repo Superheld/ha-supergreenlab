@@ -59,9 +59,14 @@ Dashboards* if you don't want it.)
 
 ## Setup
 
-Controllers on the default mDNS name (`supergreencontroller`) are **auto-discovered**:
-look for a *SuperGreenLab Controller discovered* card under
-**Settings → Devices & Services** and just confirm it. Otherwise add it manually:
+**Auto-discovery works only for controllers still on the *default* mDNS name
+`supergreencontroller`.** The app derives the mDNS name from the device name, so
+once you've named your controller it won't be auto-discovered (a name-independent
+fix needs a firmware change — see [DEVELOPMENT.md](DEVELOPMENT.md)). If a
+*SuperGreenLab Controller discovered* card appears under **Settings → Devices &
+Services**, just confirm it.
+
+**Otherwise — and this is the normal case — add it manually by IP:**
 
 1. **Settings → Devices & Services → Add Integration → SuperGreenLab Controller**.
 2. Enter the controller's IP address (e.g. `192.168.1.50`).

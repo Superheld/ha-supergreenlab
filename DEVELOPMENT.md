@@ -398,6 +398,14 @@ plain ESP32 (no native USB).
   the sensor/motor **sources**. (Open: moving the source selects into the options
   flow was attempted and didn't work cleanly yet — to be revisited; current state
   keeps them as on-page selects.)
+- **Zeroconf discovery only catches the default mDNS name.** The firmware
+  advertises a generic `_http._tcp` with **no TXT records**, and the app derives
+  `MDNS_DOMAIN` from the device name (verified `dings` on the test unit). HA
+  requires a name/property filter for `_http._tcp`, so our matcher is
+  `name: supergreencontroller*` — i.e. only *default-named* controllers are
+  discovered; renamed ones (most real installs) must be added by IP. Universal,
+  name-independent discovery needs a firmware mDNS marker (TXT / dedicated service
+  type) — see FIRMWARE_REVIEW.md. Manual IP entry is the always-works fallback.
 
 ## Contributing
 
