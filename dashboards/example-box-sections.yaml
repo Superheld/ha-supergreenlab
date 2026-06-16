@@ -1,0 +1,203 @@
+# Modern "Sections" dashboard for one SuperGreenLab box (Box 0).
+#
+# Native cards only — no custom card needed. Per-mode "dependent displays" are
+# done with HA's built-in `visibility` conditions (a field only shows when the
+# mode calls for it). This is the recommended, future-proof way.
+#
+# How to use: Settings -> Dashboards -> Add dashboard -> (open the ⋮ -> Edit in
+# YAML / raw config) and paste this. Or add a single "Sections" view and paste
+# the `sections:` block.
+#
+# Entity ids: shown as box_0_* (what you get after re-adding the integration on
+# 0.12.0+). If you didn't re-add, your ids keep their old prefix (e.g.
+# dings_box_0_*) — adjust accordingly. Duplicate the view per box (box_1, …).
+
+title: Grow box
+views:
+  - title: Box 0
+    type: sections
+    sections:
+      # ---- Lights --------------------------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Lights
+          - type: tile
+            entity: light.box_0_light_0
+            features:
+              - type: light-brightness
+          # Add light.box_0_light_1 / _2 … for your other channels.
+          - type: tile
+            entity: select.box_0_light_0_spectrum
+            name: Light 0 spectrum
+
+      # ---- Light schedule ------------------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Light schedule
+          - type: tile
+            entity: select.box_0_timer_mode
+          # On/Off schedule -> show the times
+          - type: tile
+            entity: time.box_0_on_time
+            features:
+              - type: datetime-picker
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: "On/Off schedule"
+          - type: tile
+            entity: time.box_0_off_time
+            features:
+              - type: datetime-picker
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: "On/Off schedule"
+          # Season -> show the season fields + progress
+          - type: tile
+            entity: sensor.box_0_season_date
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+          - type: tile
+            entity: number.box_0_season_start_month
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+          - type: tile
+            entity: number.box_0_season_start_day
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+          - type: tile
+            entity: number.box_0_season_duration
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+          - type: tile
+            entity: number.box_0_season_sim_days
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+          - type: tile
+            entity: button.box_0_start_season
+            visibility:
+              - condition: state
+                entity: select.box_0_timer_mode
+                state: Season
+
+      # ---- Climate -------------------------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Climate
+          - type: tile
+            entity: sensor.box_0_temperature
+          - type: tile
+            entity: sensor.box_0_humidity
+          - type: tile
+            entity: sensor.box_0_vpd
+          - type: tile
+            entity: sensor.box_0_co2
+
+      # ---- Fan (in-box circulation) -------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Fan
+          - type: tile
+            entity: sensor.box_0_fan
+            name: Fan now
+          - type: tile
+            entity: select.box_0_fan_mode
+          - type: tile
+            entity: number.box_0_fan_speed_min
+            features:
+              - type: numeric-input
+          - type: tile
+            entity: number.box_0_fan_speed_max
+            features:
+              - type: numeric-input
+          # Reference range only matters for the sensor-following modes
+          - type: tile
+            entity: number.box_0_fan_reference_from
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_fan_mode
+                state:
+                  - Temperature
+                  - Humidity
+                  - VPD
+                  - CO2
+          - type: tile
+            entity: number.box_0_fan_reference_to
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_fan_mode
+                state:
+                  - Temperature
+                  - Humidity
+                  - VPD
+                  - CO2
+
+      # ---- Blower (exhaust) ---------------------------------------------
+      - type: grid
+        cards:
+          - type: heading
+            heading: Blower
+          - type: tile
+            entity: sensor.box_0_blower
+            name: Blower now
+          - type: tile
+            entity: select.box_0_blower_mode
+          - type: tile
+            entity: number.box_0_blower_speed_min
+            features:
+              - type: numeric-input
+          - type: tile
+            entity: number.box_0_blower_speed_max
+            features:
+              - type: numeric-input
+          - type: tile
+            entity: number.box_0_blower_reference_from
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_blower_mode
+                state:
+                  - Temperature
+                  - Humidity
+                  - VPD
+                  - CO2
+          - type: tile
+            entity: number.box_0_blower_reference_to
+            features:
+              - type: numeric-input
+            visibility:
+              - condition: state
+                entity: select.box_0_blower_mode
+                state:
+                  - Temperature
+                  - Humidity
+                  - VPD
+                  - CO2

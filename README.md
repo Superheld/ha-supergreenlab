@@ -245,13 +245,20 @@ entity: select.supergreencontroller_box_0_timer_mode
 
 Any derived entity or the title can be overridden explicitly in the YAML.
 
-## Example dashboard
+## Example dashboards
 
-[`dashboards/example-box.yaml`](dashboards/example-box.yaml) is a ready-to-paste
-Lovelace view for one box, built from native cards. It bundles each dependent
-group into one card — e.g. a fan's **mode + reference range + speed range**
-together — so you don't have to assemble the entities by hand. Adjust the entity
-IDs to your device name/box.
+> Note: Home Assistant integrations can't install a dashboard for you — these are
+> ready-to-paste templates. Settings → Dashboards → add a dashboard/view and
+> paste, then adjust the entity ids to your box.
+
+- **[`dashboards/example-box-sections.yaml`](dashboards/example-box-sections.yaml)**
+  *(recommended)* — a modern **Sections** view for one box using native **tile**
+  cards. The mode-dependent fields are shown/hidden with HA's built-in
+  **visibility conditions** (e.g. season fields only in Season mode, a fan's
+  reference range only when it follows a sensor). No custom card required — this is
+  the future-proof, native way.
+- [`dashboards/example-box.yaml`](dashboards/example-box.yaml) — a simpler view
+  built from plain `entities` cards, if you prefer.
 
 ---
 

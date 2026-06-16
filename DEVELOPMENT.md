@@ -308,9 +308,14 @@ or manual dashboard resource is needed. Notes:
   choose which rows to show — so controls look/behave natively.
 - They are **mode-aware**: `sgl-fan-card` switches rows on the fan/blower mode;
   `sgl-light-card` is the **scheduler** (like the app's schedule screen) — it
-  shows only the timer mode + the inputs that mode needs (On/Off → grow-phase
-  select + on/off times; Season → season settings). Per-channel brightness and
-  "light on" are deliberately *not* in it.
+  shows only the timer mode + the inputs that mode needs (On/Off → on/off times;
+  Season → season date + season settings). Per-channel brightness and "light on"
+  are deliberately *not* in it.
+- **Direction:** the same mode-aware behaviour is now achievable *natively* with a
+  **Sections view + per-card `visibility` conditions** (see
+  `dashboards/example-box-sections.yaml`) — no custom JS, fits the modern design,
+  and uses explicit ids so it can't mis-resolve. That's the recommended path; the
+  custom cards may be retired in favour of it.
 - `sgl-box-card` is the per-box **hardware setup** card (lean on purpose): two
   `{type: "section"}` groups — *Climate sensors* (the `*_SOURCE` selects) and
   *Light spectrum* (`LED_x_TYPE`). No live values / fan modes / schedule. Anchors
