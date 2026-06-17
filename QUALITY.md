@@ -52,8 +52,8 @@ Legend: ✅ done · ⚠️ partial · ❌ not yet · — not applicable
 |------|--------|------|
 | devices | ✅ | Controller + per-box sub-devices via `via_device` |
 | diagnostics | ✅ | Redacted config-entry diagnostics |
-| discovery | ✅ | zeroconf / mDNS (default-named controllers) |
-| discovery-update-info | ✅ | Host updated from discovery |
+| discovery | ✅ | zeroconf / mDNS (default-named) + DHCP (registered devices, by MAC) |
+| discovery-update-info | ✅ | Host updated from zeroconf and from DHCP leases (name-independent) |
 | entity-category | ✅ | config / diagnostic categories |
 | entity-device-class | ✅ | temperature, humidity, pressure, CO2, weight, timestamp… |
 | entity-disabled-by-default | ✅ | Advanced/rare entities disabled by default |

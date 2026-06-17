@@ -74,10 +74,13 @@ Services**, just confirm it.
    token on the device.
 
 The controller's chip MAC is used as its unique id, so a changing DHCP address
-won't create duplicates. If the IP does change, open the integration's
-**⋮ → Reconfigure** and enter the new address — your entities and their history
-are kept. If the device later asks for an auth token, Home Assistant prompts you
-to re-authenticate automatically.
+won't create duplicates. Once a controller is set up, Home Assistant tracks it
+by MAC and **updates its IP automatically** when DHCP hands it a new address —
+even after you've renamed the controller (which is exactly when mDNS discovery
+can no longer find it). As a manual fallback you can always open the
+integration's **⋮ → Reconfigure** and enter a new address; your entities and
+history are kept. If the device later asks for an auth token, Home Assistant
+prompts you to re-authenticate automatically.
 
 ### Configure your boxes
 

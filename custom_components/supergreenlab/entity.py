@@ -10,8 +10,14 @@ things (state, restart, valve, motors) stay on the controller device.
 
 from __future__ import annotations
 
+import re
+
 from homeassistant.const import EntityCategory
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .catalog import EntityDef, entity_translation_key, is_structural
@@ -25,14 +31,22 @@ _CATEGORY = {
 
 
 def controller_device_info(device: SGLDevice, host: str) -> DeviceInfo:
-    """Device info for the controller (the parent device)."""
-    return DeviceInfo(
+    """Device info for the controller (the parent device).
+
+    The client id is the chip MAC; exposing it as a network-MAC connection lets
+    Home Assistant's DHCP discovery track the controller's IP across DHCP leases
+    even after it has been renamed (its mDNS name no longer matches).
+    """
+    info = DeviceInfo(
         identifiers={(DOMAIN, device.client_id)},
         name=device.name,
         manufacturer=MANUFACTURER,
         model=MODEL,
         configuration_url=f"http://{host}",
     )
+    if re.fullmatch(r"[0-9a-fA-F]{12}", device.client_id):
+        info["connections"] = {(CONNECTION_NETWORK_MAC, format_mac(device.client_id))}
+    return info
 
 
 def box_device_info(device: SGLDevice, box: int) -> DeviceInfo:

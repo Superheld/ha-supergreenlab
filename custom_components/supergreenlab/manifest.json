@@ -4,6 +4,7 @@
   "after_dependencies": ["frontend", "http"],
   "codeowners": ["@Superheld"],
   "config_flow": true,
+  "dhcp": [{ "registered_devices": true }],
   "documentation": "https://github.com/Superheld/ha-supergreenlab",
   "integration_type": "device",
   "iot_class": "local_polling",

@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import SuperGreenAPI, SuperGreenApiError, SuperGreenAuthError
@@ -211,6 +212,26 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={"name": self._discovered["name"]},
         )
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Track a controller's IP via DHCP (name-independent).
+
+        With ``registered_devices`` this mostly fires for already-configured
+        controllers whose lease changed: we just update the stored host. The
+        chip MAC is our unique id, so this works no matter what the device was
+        renamed to. If an unknown controller turns up, fall back to confirming.
+        """
+        await self.async_set_unique_id(discovery_info.macaddress)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        device, error = await self._async_probe(discovery_info.ip, None)
+        if error:
+            return self.async_abort(reason="cannot_connect")
+        self._discovered = {CONF_HOST: discovery_info.ip, "name": device.name}
+        self.context["title_placeholders"] = {"name": device.name}
+        return await self.async_step_zeroconf_confirm()
 
     @staticmethod
     @callback

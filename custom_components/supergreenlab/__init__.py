@@ -80,6 +80,11 @@ async def async_setup_entry(
     except SuperGreenApiError as err:
         raise ConfigEntryNotReady(f"Cannot reach controller: {err}") from err
 
+    # Keep the entry title in step with the controller's name (renames in the
+    # app would otherwise only update the device, not the entry title).
+    if entry.title != device.name:
+        hass.config_entries.async_update_entry(entry, title=device.name)
+
     fast, slow = build_coordinators(hass, entry, api, device)
     await fast.async_config_entry_first_refresh()
     await slow.async_config_entry_first_refresh()

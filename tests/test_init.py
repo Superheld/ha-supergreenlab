@@ -34,6 +34,26 @@ async def test_entity_names_from_translations(hass: HomeAssistant, setup_entry):
     assert hass.states.get(light).attributes["friendly_name"] == "Box 0 Light 0"
 
 
+async def test_entry_title_synced_to_device_name(hass: HomeAssistant, setup_entry):
+    """The entry title follows the controller's reported name."""
+    assert setup_entry.title == "Dings"
+
+
+def test_controller_device_info_has_mac_connection():
+    """A MAC-shaped client id is exposed as a network-MAC connection for DHCP."""
+    from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+
+    from custom_components.supergreenlab.coordinator import SGLDevice
+    from custom_components.supergreenlab.entity import controller_device_info
+
+    info = controller_device_info(SGLDevice(client_id="88d3491815ac", name="X"), "h")
+    assert (CONNECTION_NETWORK_MAC, "88:d3:49:18:15:ac") in info["connections"]
+
+    # A non-MAC id (e.g. the test fixture) gets no bogus connection.
+    plain = controller_device_info(SGLDevice(client_id="abc123", name="X"), "h")
+    assert "connections" not in plain
+
+
 async def test_controller_and_box_devices(hass: HomeAssistant, setup_entry):
     reg = dr.async_get(hass)
     # The controller is the parent device.

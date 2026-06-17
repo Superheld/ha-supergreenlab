@@ -436,6 +436,20 @@ plain ESP32 (no native USB).
   discovered; renamed ones (most real installs) must be added by IP. Universal,
   name-independent discovery needs a firmware mDNS marker (TXT / dedicated service
   type) — see FIRMWARE_REVIEW.md. Manual IP entry is the always-works fallback.
+- **DHCP tracking covers the renamed + changing-IP case.** Because a renamed
+  controller drops off mDNS, a later DHCP IP change would otherwise strand it.
+  `BROKER_CLIENTID` is the chip MAC (verified `88d3491815ac` on the test unit),
+  so we expose it as a `CONNECTION_NETWORK_MAC` on the controller device and add
+  `"dhcp": [{"registered_devices": true}]` to the manifest. HA then watches the
+  MACs of *already-configured* controllers and fires `async_step_dhcp` on a lease
+  change, which updates the host name-independently. This does **not** do
+  first-time discovery of a renamed device (only `registered_devices` are
+  tracked); a broad Espressif-OUI matcher would be too noisy. First-time renamed
+  discovery still wants the firmware mDNS marker.
+- **Entry title follows the device name.** `async_setup_entry` updates the entry
+  title to the controller's reported `DEVICE_NAME` on each setup (the listener is
+  registered *after* this, so it doesn't trigger a reload loop), so renaming in
+  the app reflects in HA after a reload.
 
 ## Contributing
 

@@ -8,6 +8,7 @@ from unittest.mock import patch
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -146,6 +147,21 @@ async def test_reauth_invalid(hass: HomeAssistant, mock_api):
         )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_dhcp_updates_host(hass: HomeAssistant, mock_api):
+    """A DHCP lease for a known controller updates its stored IP."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"host": "1.2.3.4", "auth": None}, unique_id="abc123"
+    )
+    entry.add_to_hass(hass)
+    info = DhcpServiceInfo(ip="5.6.7.8", hostname="dings", macaddress="abc123")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=info
+    )
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "5.6.7.8"
 
 
 async def test_duplicate_aborts(hass: HomeAssistant, mock_api):
