@@ -78,7 +78,7 @@ Legend: ✅ done · ⚠️ partial · ❌ not yet · — not applicable
 |------|--------|------|
 | inject-websession | ✅ | `async_get_clientsession` |
 | async-dependency | — | No dependency library; talks HTTP directly via HA's aiohttp |
-| strict-typing | ⚠️ | `py.typed` present and fully type-hinted; not yet verified under mypy strict |
+| strict-typing | ✅ | `py.typed` + passes `mypy --strict` (CI job); no in-code ignores |
 
 ## The one external blocker: brands
 

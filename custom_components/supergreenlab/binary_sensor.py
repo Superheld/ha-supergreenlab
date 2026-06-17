@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -39,7 +42,11 @@ class SuperGreenBinarySensor(SGLCatalogEntity, BinarySensorEntity):
     ) -> None:
         """Apply binary-sensor metadata."""
         super().__init__(coordinator, device, definition, placeholders)
-        self._attr_device_class = definition.device_class
+        self._attr_device_class = (
+            BinarySensorDeviceClass(definition.device_class)
+            if definition.device_class
+            else None
+        )
 
     @property
     def is_on(self) -> bool | None:

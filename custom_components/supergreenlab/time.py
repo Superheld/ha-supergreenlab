@@ -47,7 +47,8 @@ class SuperGreenTime(SGLCatalogEntity, TimeEntity):
     ) -> None:
         """Resolve both the hour and minute keys."""
         super().__init__(coordinator, device, definition, placeholders)
-        # _key holds the hour key; key2 holds the minute key.
+        # _key holds the hour key; key2 holds the minute key (always set for times).
+        assert definition.key2 is not None
         self._minute_key = definition.key2.format(**placeholders)
 
     @property

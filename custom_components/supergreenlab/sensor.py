@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,9 +51,17 @@ class SuperGreenSensor(SGLCatalogEntity, SensorEntity):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_options = list(definition.value_map.values())
         else:
-            self._attr_device_class = definition.device_class
+            self._attr_device_class = (
+                SensorDeviceClass(definition.device_class)
+                if definition.device_class
+                else None
+            )
             self._attr_native_unit_of_measurement = definition.unit
-            self._attr_state_class = definition.state_class
+            self._attr_state_class = (
+                SensorStateClass(definition.state_class)
+                if definition.state_class
+                else None
+            )
             if definition.precision is not None:
                 self._attr_suggested_display_precision = definition.precision
 

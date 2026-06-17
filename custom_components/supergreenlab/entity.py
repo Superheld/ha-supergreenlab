@@ -120,7 +120,9 @@ class SGLCatalogEntity(CoordinatorEntity[SuperGreenDataUpdateCoordinator]):
         else:
             self._attr_device_info = controller_device_info(device, coordinator.api.host)
         self._attr_unique_id = f"{device.client_id}_{self._key}"
-        self._attr_entity_category = _CATEGORY.get(definition.category)
+        self._attr_entity_category = (
+            _CATEGORY.get(definition.category) if definition.category else None
+        )
         self._attr_entity_registry_enabled_default = definition.enabled_default
 
     @property

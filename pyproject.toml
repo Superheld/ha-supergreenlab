@@ -1,3 +1,13 @@
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+# We consume Home Assistant's typed API but don't control its re-export hygiene
+# (e.g. light.ColorMode), and HA itself isn't fully type-checkable here, so allow
+# implicit re-exports and silence imports we can't resolve standalone.
+implicit_reexport = true
+follow_imports = "silent"
+ignore_missing_imports = true
+files = ["custom_components/supergreenlab"]

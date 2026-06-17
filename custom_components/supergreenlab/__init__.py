@@ -19,6 +19,7 @@ from .config_flow import CONF_AUTH
 from .const import CONF_HOST, DOMAIN
 from .coordinator import (
     RuntimeData,
+    SGLDevice,
     SuperGreenConfigEntry,
     async_detect_device,
     build_coordinators,
@@ -96,7 +97,7 @@ async def async_setup_entry(
     return True
 
 
-def _valid_device_identifiers(device) -> set[tuple[str, str]]:
+def _valid_device_identifiers(device: SGLDevice) -> set[tuple[str, str]]:
     """The device-registry identifiers this controller currently exposes."""
     valid = {(DOMAIN, device.client_id)}
     for box in device.boxes:
@@ -106,7 +107,7 @@ def _valid_device_identifiers(device) -> set[tuple[str, str]]:
 
 @callback
 def _async_prune_stale_devices(
-    hass: HomeAssistant, entry: SuperGreenConfigEntry, device
+    hass: HomeAssistant, entry: SuperGreenConfigEntry, device: SGLDevice
 ) -> None:
     """Remove box sub-devices for boxes that are no longer enabled.
 

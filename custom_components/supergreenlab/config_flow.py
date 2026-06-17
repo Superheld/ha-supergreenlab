@@ -28,7 +28,7 @@ from .const import (
     MAX_BOXES,
     MAX_LED_CHANNELS,
 )
-from .coordinator import async_detect_device
+from .coordinator import SGLDevice, async_detect_device
 from .sources import LED_BOX_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,7 +64,9 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_probe(self, host: str, auth: str | None):
+    async def _async_probe(
+        self, host: str, auth: str | None
+    ) -> tuple[SGLDevice | None, str | None]:
         """Probe a controller, returning ``(device, error_key)``.
 
         ``error_key`` is ``None`` on success, otherwise ``"invalid_auth"`` or
@@ -96,6 +98,7 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
+                assert device is not None
                 await self.async_set_unique_id(device.client_id)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
@@ -129,6 +132,7 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error
             else:
                 # Guard against pointing the entry at a *different* controller.
+                assert device is not None
                 await self.async_set_unique_id(device.client_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
@@ -167,6 +171,7 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
+                assert device is not None
                 await self.async_set_unique_id(device.client_id)
                 self._abort_if_unique_id_mismatch(reason="wrong_device")
                 return self.async_update_reload_and_abort(
@@ -229,6 +234,7 @@ class SuperGreenConfigFlow(ConfigFlow, domain=DOMAIN):
         device, error = await self._async_probe(discovery_info.ip, None)
         if error:
             return self.async_abort(reason="cannot_connect")
+        assert device is not None
         self._discovered = {CONF_HOST: discovery_info.ip, "name": device.name}
         self.context["title_placeholders"] = {"name": device.name}
         return await self.async_step_zeroconf_confirm()

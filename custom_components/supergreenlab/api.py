@@ -134,6 +134,7 @@ class SuperGreenAPI:
         except TimeoutError as err:
             raise SuperGreenApiError("Timeout fetching config.json") from err
         try:
-            return json.loads(text)
+            data: dict[str, Any] = json.loads(text)
         except json.JSONDecodeError as err:
             raise SuperGreenApiError("config.json is not valid JSON") from err
+        return data

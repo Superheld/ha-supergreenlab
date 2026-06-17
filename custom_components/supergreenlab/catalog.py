@@ -23,8 +23,12 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from .const import MAX_BOXES, MAX_LED_CHANNELS, VPD_DIVISOR
+
+if TYPE_CHECKING:
+    from .coordinator import SGLDevice
 from .sources import (
     LED_TYPE_MAP,
     SOURCE_MAPS,
@@ -101,8 +105,10 @@ def entity_translation_name(d: EntityDef) -> str:
 
 # --- sensors (live values) -------------------------------------------------
 
-_TEMP = dict(device_class="temperature", unit="°C", state_class="measurement", fast=True)
-_PCT = dict(unit="%", state_class="measurement", fast=True)
+_TEMP: dict[str, Any] = dict(
+    device_class="temperature", unit="°C", state_class="measurement", fast=True
+)
+_PCT: dict[str, Any] = dict(unit="%", state_class="measurement", fast=True)
 
 SENSORS: tuple[EntityDef, ...] = (
     EntityDef(platform="sensor", key="BOX_{box}_TEMP", name="Box {box} Temperature",
@@ -152,7 +158,7 @@ BINARY_SENSORS: tuple[EntityDef, ...] = (
 
 # --- numbers (writable config) ---------------------------------------------
 
-_CFG = dict(category="config")
+_CFG: dict[str, Any] = dict(category="config")
 
 NUMBERS: tuple[EntityDef, ...] = (
     # ventilation curve
@@ -313,16 +319,18 @@ ALL_DEFS: tuple[EntityDef, ...] = (
 )
 
 
-def expand(defs: tuple[EntityDef, ...], device) -> list[tuple[EntityDef, dict]]:
+def expand(
+    defs: tuple[EntityDef, ...], device: SGLDevice
+) -> list[tuple[EntityDef, dict[str, int]]]:
     """Expand templated defs into concrete (def, placeholders) instances."""
-    out: list[tuple[EntityDef, dict]] = []
+    out: list[tuple[EntityDef, dict[str, int]]] = []
     for d in defs:
         for placeholders in _scope_instances(d.scope, device):
             out.append((d, placeholders))
     return out
 
 
-def _scope_instances(scope: str, device) -> list[dict]:
+def _scope_instances(scope: str, device: SGLDevice) -> list[dict[str, int]]:
     if scope == "box":
         return [{"box": b} for b in device.boxes]
     if scope == "box_all":

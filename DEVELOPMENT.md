@@ -289,6 +289,9 @@ Add tests with every change — Python for entity logic, node for card resolutio
   as a "version", and a feature branch isn't a valid one — running it on every
   branch push failed spuriously (`structure for refs/heads/… is not compliant`).
 - **pytest** — the Python suite on Python 3.13
+- **mypy** — `mypy --strict` over the component (config in `pyproject.toml`;
+  `implicit_reexport`/`ignore_missing_imports` on because we consume HA's typed
+  API but can't fully type-check HA itself). No in-code `# type: ignore`.
 - **cards** — `node --test` for the card resolution logic
 
 ## Release workflow

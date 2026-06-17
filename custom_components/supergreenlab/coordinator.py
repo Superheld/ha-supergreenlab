@@ -69,9 +69,9 @@ async def async_detect_device(api: SuperGreenAPI) -> SGLDevice:
 
     led_to_box: dict[int, int] = {}
     for led in range(MAX_LED_CHANNELS):
-        box = await api.get_int(KEY_LED_BOX.format(led=led))
-        if box is not None and box in boxes:
-            led_to_box[led] = box
+        led_box = await api.get_int(KEY_LED_BOX.format(led=led))
+        if led_box is not None and led_box in boxes:
+            led_to_box[led] = led_box
 
     return SGLDevice(client_id=client_id, name=name, boxes=boxes, led_to_box=led_to_box)
 
